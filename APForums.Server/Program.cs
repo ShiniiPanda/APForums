@@ -1,7 +1,16 @@
+using APForums.Server.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+var connectionString = config.GetConnectionString("ForumsContext");
 
 // Add services to the container.
-
+builder.Services.AddDbContext<ForumsDbContext>(options =>
+{
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+    options.LogTo(Console.WriteLine);
+});
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

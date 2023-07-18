@@ -3,6 +3,7 @@ using System;
 using APForums.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,37 +11,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APForums.Server.Migrations
 {
     [DbContext(typeof(ForumsDbContext))]
-    partial class ForumsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230718014247_Create-Socials-Table")]
+    partial class CreateSocialsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            modelBuilder.Entity("APForums.Server.Models.Club", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("Name");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Club");
-                });
 
             modelBuilder.Entity("APForums.Server.Models.Social", b =>
                 {
@@ -128,32 +108,6 @@ namespace APForums.Server.Migrations
                     b.ToTable("users");
                 });
 
-            modelBuilder.Entity("APForums.Server.Models.UserClub", b =>
-                {
-                    b.Property<int>("ClubId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("LastUpdated")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("getdate()");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(10)")
-                        .HasDefaultValue("Member");
-
-                    b.HasKey("ClubId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserClub");
-                });
-
             modelBuilder.Entity("APForums.Server.Models.Social", b =>
                 {
                     b.HasOne("APForums.Server.Models.User", "User")
@@ -163,31 +117,6 @@ namespace APForums.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.UserClub", b =>
-                {
-                    b.HasOne("APForums.Server.Models.Club", null)
-                        .WithMany("UserClubs")
-                        .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("APForums.Server.Models.User", null)
-                        .WithMany("UserClubs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.Club", b =>
-                {
-                    b.Navigation("UserClubs");
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.User", b =>
-                {
-                    b.Navigation("UserClubs");
                 });
 #pragma warning restore 612, 618
         }

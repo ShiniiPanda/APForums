@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using APForums.Server.Models;
+using APForums.Server.Models.Types;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace APForums.Server.Data
 {
@@ -12,9 +15,33 @@ namespace APForums.Server.Data
 
         public ForumsDbContext(DbContextOptions<ForumsDbContext> options) : base(options) { }
 
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<Social> Socials { get; set; }
+
+        public DbSet<Club> Clubs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+           /* base.OnModelCreating(modelBuilder);*/
+            new UserEntityTypeConfiguration().Configure(modelBuilder.Entity<User>());
+            new SocialEntityTypeConfiguration().Configure(modelBuilder.Entity<Social>());
+            new ClubEntityTypeConfiguration().Configure(modelBuilder.Entity<Club>());
+
+            modelBuilder.Entity<Club>()
+            .HasMany(c => c.Users)
+            .WithMany(u => u.Clubs)
+            .UsingEntity<UserClub>();
+
+            modelBuilder.Entity<UserClub>()
+                .Property(uc => uc.Role)
+                .HasColumnType("nvarchar(10)")
+                .HasDefaultValue(ClubRole.Member);
+
+            modelBuilder.Entity<UserClub>()
+                .Property(uc => uc.LastUpdated)
+                .HasDefaultValueSql("getdate()")
+                .ValueGeneratedOnAddOrUpdate();
         }
 
     }

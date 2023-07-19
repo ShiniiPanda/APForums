@@ -22,7 +22,7 @@ namespace APForums.Server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Type = table.Column<string>(type: "nvarchar(20)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    LastUpdated = table.Column<DateTime>(type: "datetime(6)", nullable: true, defaultValueSql: "getdate()")
+                    LastUpdated = table.Column<DateTime>(type: "datetime(6)", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP()")
                 },
                 constraints: table =>
                 {

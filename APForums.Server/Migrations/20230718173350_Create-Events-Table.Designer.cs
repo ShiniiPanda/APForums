@@ -3,6 +3,7 @@ using System;
 using APForums.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APForums.Server.Migrations
 {
     [DbContext(typeof(ForumsDbContext))]
-    partial class ForumsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230718173350_Create-Events-Table")]
+    partial class CreateEventsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

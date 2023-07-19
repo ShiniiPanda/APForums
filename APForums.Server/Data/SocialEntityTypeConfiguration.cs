@@ -12,7 +12,7 @@ namespace APForums.Server.Data
                 .HasColumnType("nvarchar(20)");
 
             builder.Property(s => s.LastUpdated)
-                .HasDefaultValueSql("getdate()")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP()")
                 .ValueGeneratedOnAddOrUpdate();
         }
     }

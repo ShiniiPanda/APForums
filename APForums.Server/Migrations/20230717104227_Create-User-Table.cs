@@ -23,7 +23,7 @@ namespace APForums.Server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Email = table.Column<string>(type: "nvarchar(255)", nullable: false, computedColumnSql: "[Tp_Number] + '@mail.apu.edu.my'", stored: false),
+                    Email = table.Column<string>(type: "nvarchar(255)", nullable: false, computedColumnSql: "CONCAT(TpNumber, '@mail.apu.edu.my')", stored: false),
                     Phone = table.Column<string>(type: "nvarchar(20)", nullable: true),
                     DOB = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DegreeType = table.Column<string>(type: "nvarchar(20)", nullable: true),

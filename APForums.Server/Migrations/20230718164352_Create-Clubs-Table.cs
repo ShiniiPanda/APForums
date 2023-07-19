@@ -13,7 +13,7 @@ namespace APForums.Server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Club",
+                name: "clubs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -25,30 +25,30 @@ namespace APForums.Server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Club", x => x.Id);
+                    table.PrimaryKey("PK_clubs", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "UserClub",
+                name: "users_clubs",
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
                     ClubId = table.Column<int>(type: "int", nullable: false),
                     Role = table.Column<string>(type: "nvarchar(10)", nullable: false, defaultValue: "Member"),
-                    LastUpdated = table.Column<DateTime>(type: "datetime(6)", nullable: true, defaultValueSql: "getdate()")
+                    LastUpdated = table.Column<DateTime>(type: "datetime(6)", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserClub", x => new { x.ClubId, x.UserId });
+                    table.PrimaryKey("PK_users_clubs", x => new { x.ClubId, x.UserId });
                     table.ForeignKey(
-                        name: "FK_UserClub_Club_ClubId",
+                        name: "FK_users_clubs_clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "Club",
+                        principalTable: "clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserClub_users_UserId",
+                        name: "FK_users_clubs_users_UserId",
                         column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
@@ -57,8 +57,8 @@ namespace APForums.Server.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserClub_UserId",
-                table: "UserClub",
+                name: "IX_users_clubs_UserId",
+                table: "users_clubs",
                 column: "UserId");
         }
 
@@ -66,10 +66,10 @@ namespace APForums.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "UserClub");
+                name: "users_clubs");
 
             migrationBuilder.DropTable(
-                name: "Club");
+                name: "clubs");
         }
     }
 }

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APForums.Server.Migrations
 {
     [DbContext(typeof(ForumsDbContext))]
-    [Migration("20230718135028_Create-Clubs-Table")]
+    [Migration("20230718164352_Create-Clubs-Table")]
     partial class CreateClubsTable
     {
         /// <inheritdoc />
@@ -42,7 +42,7 @@ namespace APForums.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Club");
+                    b.ToTable("clubs");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Social", b =>
@@ -154,7 +154,7 @@ namespace APForums.Server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserClub");
+                    b.ToTable("users_clubs");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Social", b =>

@@ -1,7 +1,9 @@
 ﻿using APForums.Server.Models.Types;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APForums.Server.Models
 {
+    [Table("users_clubs")]
     public class UserClub
     {
 

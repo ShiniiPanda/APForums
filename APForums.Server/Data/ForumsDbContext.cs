@@ -21,12 +21,15 @@ namespace APForums.Server.Data
 
         public DbSet<Club> Clubs { get; set; }
 
+        public DbSet<Event> Events { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
            /* base.OnModelCreating(modelBuilder);*/
             new UserEntityTypeConfiguration().Configure(modelBuilder.Entity<User>());
             new SocialEntityTypeConfiguration().Configure(modelBuilder.Entity<Social>());
             new ClubEntityTypeConfiguration().Configure(modelBuilder.Entity<Club>());
+            new EventEntityTypeConfiguration().Configure(modelBuilder.Entity<Event>());
 
             modelBuilder.Entity<Club>()
             .HasMany(c => c.Users)
@@ -40,7 +43,7 @@ namespace APForums.Server.Data
 
             modelBuilder.Entity<UserClub>()
                 .Property(uc => uc.LastUpdated)
-                .HasDefaultValueSql("getdate()")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP()")
                 .ValueGeneratedOnAddOrUpdate();
         }
 

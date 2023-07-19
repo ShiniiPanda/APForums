@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APForums.Server.Models
 {
+    [Table("clubs")]
     public class Club
     {
 
@@ -23,6 +24,8 @@ namespace APForums.Server.Models
         public List<User> Users { get; } = new();
 
         public List<UserClub> UserClubs { get; } = new();
+
+        public ICollection<Event> Events = new List<Event>();
 
     }
 }

@@ -14,7 +14,7 @@ namespace APForums.Server.Data
 
             // Virtual table, data is not persisted for storage efficiency. Email is always computed as TP Email when retrieved.
             builder.Property(u => u.Email)
-                .HasComputedColumnSql("[Tp_Number] + '@mail.apu.edu.my'", stored: false);
+                .HasComputedColumnSql("CONCAT(TpNumber, '@mail.apu.edu.my')", stored: false);
 
             // Enum to String conversions for storage and retrieval
             builder.Property(u => u.DegreeType)

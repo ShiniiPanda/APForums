@@ -23,6 +23,8 @@ namespace APForums.Server.Data
 
         public DbSet<Event> Events { get; set; }
 
+        public DbSet<Connection> Connections { get; set; }  
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
            /* base.OnModelCreating(modelBuilder);*/
@@ -43,8 +45,17 @@ namespace APForums.Server.Data
 
             modelBuilder.Entity<UserClub>()
                 .Property(uc => uc.LastUpdated)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP()")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .ValueGeneratedOnAddOrUpdate();
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.FollowingList)
+                .WithMany(u => u.FollowersList)
+                .UsingEntity<Connection>(
+                    r => r.HasOne(c => c.Follower).WithMany().HasForeignKey(c => c.FollowedId),
+                    l => l.HasOne(c => c.Followed).WithMany().HasForeignKey(c => c.FollowerId),
+                    j => j.Property(c => c.Date).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAddOrUpdate()
+                );
         }
 
     }

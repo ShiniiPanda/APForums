@@ -45,15 +45,25 @@ namespace APForums.Server.Models
 
         public List<UserClub> UserClubs { get; } = new();
 
-        /*    public string GetFirstName()
-            {
-                if (string.IsNullOrEmpty(Name))
-                {
-                    return string.Empty;
-                }
+        /*public ICollection<Connection> FollowersList = new List<Connection>();
 
-                return $"{Name[0]}";
-            }*/
+        public ICollection<Connection> FollowingList = new List<Connection>();   */
+
+
+        public List<User> FollowersList { get; } = new();
+
+        public List<User> FollowingList { get; } = new();
+
+
+        /*public string GetFirstName()
+        {
+            if (string.IsNullOrEmpty(Name))
+            {
+                return string.Empty;
+            }
+
+            return $"{Name[0]}";
+        }*/
 
     }
 }

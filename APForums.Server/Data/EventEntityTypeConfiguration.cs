@@ -9,7 +9,7 @@ namespace APForums.Server.Data
         public void Configure(EntityTypeBuilder<Event> builder)
         {
             builder.Property(e => e.PostedDate)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP()")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .ValueGeneratedOnAdd();
         }
     }

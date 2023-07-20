@@ -1,4 +1,7 @@
+using APForums.Server.Data;
+using APForums.Server.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace APForums.Server.Controllers
 {

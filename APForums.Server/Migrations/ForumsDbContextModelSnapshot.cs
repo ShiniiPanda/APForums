@@ -42,6 +42,32 @@ namespace APForums.Server.Migrations
                     b.ToTable("clubs");
                 });
 
+            modelBuilder.Entity("APForums.Server.Models.Connection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("Date")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("FollowedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowedId");
+
+                    b.HasIndex("FollowerId");
+
+                    b.ToTable("connections");
+                });
+
             modelBuilder.Entity("APForums.Server.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -63,7 +89,7 @@ namespace APForums.Server.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP()");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime(6)");
@@ -92,7 +118,7 @@ namespace APForums.Server.Migrations
                     b.Property<DateTime?>("LastUpdated")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP()");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -180,7 +206,7 @@ namespace APForums.Server.Migrations
                     b.Property<DateTime?>("LastUpdated")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP()");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -193,6 +219,25 @@ namespace APForums.Server.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("users_clubs");
+                });
+
+            modelBuilder.Entity("APForums.Server.Models.Connection", b =>
+                {
+                    b.HasOne("APForums.Server.Models.User", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("APForums.Server.Models.User", "Followed")
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Followed");
+
+                    b.Navigation("Follower");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Event", b =>

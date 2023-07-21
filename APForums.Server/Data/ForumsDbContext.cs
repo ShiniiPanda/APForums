@@ -25,6 +25,8 @@ namespace APForums.Server.Data
 
         public DbSet<Connection> Connections { get; set; }  
 
+        public DbSet<ProfileTag> ProfileTags { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
            /* base.OnModelCreating(modelBuilder);*/
@@ -32,6 +34,7 @@ namespace APForums.Server.Data
             new SocialEntityTypeConfiguration().Configure(modelBuilder.Entity<Social>());
             new ClubEntityTypeConfiguration().Configure(modelBuilder.Entity<Club>());
             new EventEntityTypeConfiguration().Configure(modelBuilder.Entity<Event>());
+            new ProfileTagEntityTypeConfiguration().Configure(modelBuilder.Entity<ProfileTag>());
 
             modelBuilder.Entity<Club>()
             .HasMany(c => c.Users)
@@ -56,6 +59,11 @@ namespace APForums.Server.Data
                     l => l.HasOne(c => c.Followed).WithMany().HasForeignKey(c => c.FollowerId),
                     j => j.Property(c => c.Date).HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAddOrUpdate()
                 );
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.ProfileTags)
+                .WithMany(pt => pt.Users)
+                .UsingEntity("UserProfileTags");
         }
 
     }

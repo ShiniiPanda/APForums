@@ -37,6 +37,8 @@ namespace APForums.Server.Models
 
         public int? Level { get; set; }
 
+        public string? IntakeCode { get; set; }
+
         // Relationship Navigators
 
         public ICollection<Social> Socials = new List<Social>(); // To access social links
@@ -53,6 +55,8 @@ namespace APForums.Server.Models
         public List<User> FollowersList { get; } = new();
 
         public List<User> FollowingList { get; } = new();
+
+        public List<ProfileTag> ProfileTags = new();
 
 
         /*public string GetFirstName()

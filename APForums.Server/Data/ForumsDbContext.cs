@@ -27,6 +27,12 @@ namespace APForums.Server.Data
 
         public DbSet<ProfileTag> ProfileTags { get; set; }
 
+        public DbSet<Forum> Forums { get; set; }
+
+        public DbSet<Post> Posts { get; set; }
+
+        public DbSet<PostTag> PostTags { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
            /* base.OnModelCreating(modelBuilder);*/
@@ -35,6 +41,7 @@ namespace APForums.Server.Data
             new ClubEntityTypeConfiguration().Configure(modelBuilder.Entity<Club>());
             new EventEntityTypeConfiguration().Configure(modelBuilder.Entity<Event>());
             new ProfileTagEntityTypeConfiguration().Configure(modelBuilder.Entity<ProfileTag>());
+            new PostEntityTypeConfiguration().Configure(modelBuilder.Entity<Post>());
 
             modelBuilder.Entity<Club>()
             .HasMany(c => c.Users)
@@ -63,7 +70,12 @@ namespace APForums.Server.Data
             modelBuilder.Entity<User>()
                 .HasMany(u => u.ProfileTags)
                 .WithMany(pt => pt.Users)
-                .UsingEntity("UserProfileTags");
+                .UsingEntity("users_profile_tags");
+
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.PostTags)
+                .WithMany(pt => pt.Posts)
+                .UsingEntity("posts_post_tags");
         }
 
     }

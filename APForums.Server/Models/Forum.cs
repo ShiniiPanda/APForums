@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APForums.Server.Models
 {
-    [Table("profile_tags")]
-    public class ProfileTag
+    [Table("forums")]
+    public class Forum
     {
 
         [Key]
@@ -14,16 +14,14 @@ namespace APForums.Server.Models
         [Column("Name", TypeName = "nvarchar(100)")]
         public string Name { get; set; } = null!;
 
-        [Column("FilePath", TypeName = "nvarchar(500)")]
-        public string? FilePath { get; set; }
+        public string? Description { get; set; }
+        
+        [Column(TypeName = "nvarchar(30)")]
+        public string? Intake { get; set; }
 
-        public DateTime? Created { get; set; }
+        // Relationship Navigator
 
-        public DateTime? Updated { get; set; }
-
-        // Relationship Navigators 
-
-        public List<User> Users { get; } = new();
+        public ICollection<Post> Posts { get; } = new List<Post>();
 
 
     }

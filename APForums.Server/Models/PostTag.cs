@@ -3,10 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace APForums.Server.Models
 {
-    [Table("profile_tags")]
-    public class ProfileTag
+    [Table("post_tags")]
+    public class PostTag
     {
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -17,13 +16,10 @@ namespace APForums.Server.Models
         [Column("FilePath", TypeName = "nvarchar(500)")]
         public string? FilePath { get; set; }
 
-        public DateTime? Created { get; set; }
+        // Relationship Navigators
 
-        public DateTime? Updated { get; set; }
+        public List<Post> Posts { get; } = new();
 
-        // Relationship Navigators 
-
-        public List<User> Users { get; } = new();
 
 
     }

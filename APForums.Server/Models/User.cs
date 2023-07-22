@@ -15,6 +15,10 @@ namespace APForums.Server.Models
         public string TPNumber { get; set; } = null!;
 
         public string Password { get; set; } = null!;
+/*
+        private string _password = null!;
+
+        public string HashSalt { get; set; } = null!;*/
 
         public string Name { get; set; } = null!;
 
@@ -37,11 +41,12 @@ namespace APForums.Server.Models
 
         public int? Level { get; set; }
 
+        [Column("Intake", TypeName = "nvarchar(30)")]
         public string? IntakeCode { get; set; }
 
         // Relationship Navigators
 
-        public ICollection<Social> Socials = new List<Social>(); // To access social links
+        public ICollection<Social> Socials { get; } = new List<Social>(); // To access social links
 
         public List<Club> Clubs { get; } = new(); // To access user clubs
 
@@ -56,7 +61,9 @@ namespace APForums.Server.Models
 
         public List<User> FollowingList { get; } = new();
 
-        public List<ProfileTag> ProfileTags = new();
+        public List<ProfileTag> ProfileTags { get;  } = new();
+
+        public ICollection<Post> UserPosts { get; } = new List<Post>(); // To access all user posts
 
 
         /*public string GetFirstName()

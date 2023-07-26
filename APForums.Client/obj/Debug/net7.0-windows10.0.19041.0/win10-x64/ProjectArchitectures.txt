@@ -1,0 +1,1 @@
+C:\Users\celis\source\repos\APForums\APForums.Client\APForums.Client.csproj;x64

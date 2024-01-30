@@ -16,6 +16,10 @@ namespace APForums.Server.Data
             builder.Property(u => u.Email)
                 .HasComputedColumnSql("CONCAT(TpNumber, '@mail.apu.edu.my')", stored: false);
 
+            // Backing field for password property. Meant to encrypt password with a setter, getter returns hashed password.
+            builder.Property(u => u.Password)
+                .HasField("_password");
+
             // Enum to String conversions for storage and retrieval
             builder.Property(u => u.DegreeType)
                 .HasColumnType("nvarchar(20)");
@@ -28,6 +32,9 @@ namespace APForums.Server.Data
 
             builder.Property(u => u.Department)
                 .HasColumnType("nvarchar(20)");
+
+            builder.Property(u => u.Picture)
+                .HasDefaultValue("default_1.png");
         }
     }
 }

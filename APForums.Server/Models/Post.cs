@@ -1,4 +1,5 @@
-﻿using APForums.Server.Models.Types;
+﻿using APForums.Server.Data.DTO;
+using APForums.Server.Models.Types;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,6 +8,22 @@ namespace APForums.Server.Models
     [Table("posts")]
     public class Post
     {
+
+        public Post()
+        {
+
+        }
+
+        public Post(PostDTO dto)
+        {
+            Title = dto.Title!;
+            Content = dto.Content;
+            Type = (PostType)dto.Type!;
+            PublishedDate = DateTime.UtcNow;
+            LastUpdated = DateTime.UtcNow;
+            ForumId = (int)dto.ForumId!;
+            UserId = dto.User.Id;
+        }
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -34,6 +51,12 @@ namespace APForums.Server.Models
         public User User { get; set; } = null!;
 
         public int UserId { get; set; }
+
+        public ICollection<Comment> Comments { get; } = new List<Comment>();
+
+        public ICollection<PostImpression> Impressions { get; } = new List<PostImpression>();
+
+        public List<User> UsersWithImpressions { get; } = new();
 
 
     }

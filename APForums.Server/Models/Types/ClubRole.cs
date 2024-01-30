@@ -2,8 +2,9 @@
 {
     public enum ClubRole
     {
-        Member = 0,
-        Commitee = 1,
-        Leader = 2
+        Visitor = 0,
+        Member = 1,
+        Commitee = 2,
+        Leader = 3,
     }
 }

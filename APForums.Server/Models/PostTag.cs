@@ -1,11 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using APForums.Server.Data.DTO;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace APForums.Server.Models
 {
     [Table("post_tags")]
     public class PostTag
     {
+        [JsonConstructor]
+        public PostTag()
+        {
+
+        }
+
+        public PostTag(PostTagDTO dto) {
+
+            Id = dto.Id;
+            Name = dto.Name!;
+            FilePath = dto.FilePath;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }

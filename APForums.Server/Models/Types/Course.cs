@@ -5,83 +5,83 @@ namespace APForums.Server.Models.Types
     public enum Course
     {
         [Description("Computer Science")]
-        CS,
+        CS = 0,
         [Description("Computer Science: Intelligent Systems")]
-        CSIS,
+        CSIS = 1,
         [Description("Computer Science: Cyber Security")]
-        CSCYB,
+        CSCYB = 2,
         [Description("Computer Science: Data Analytics")]
-        CSDA,
+        CSDA = 3,
         [Description("Acturial Studies")]
-        ACS,
+        ACS = 4,
         [Description("Accounting & Finance")]
-        AF,
+        AF = 5,
         [Description("Accounting & Finance: Forensic Accounting")]
-        AFFA,
+        AFFA = 6,
         [Description("Accounting & Finance: Forex and Investments")]
-        AFFI,
+        AFFI = 7,
         [Description("Accounting & Finance: Internal Audit")]
-        AFIA,
+        AFIA = 8,
         [Description("Accounting & Finance: Taxation")]
-        AFTAX,
+        AFTAX = 9,
         [Description("Banking and Finance")]
-        BAF,
+        BAF = 10,
         [Description("Banking and Finance: Financial Technology")]
-        BAFFT,
+        BAFFT = 11,
         [Description("Banking and Finance: Investment and Risk Management")]
-        BAFIRM,
+        BAFIRM = 12,
         [Description("Business Management")]
-        BM,
+        BM = 13,
         [Description("Business Management: E-Business")]
-        BMIRM,
+        BMIRM = 14,
         [Description("Computer Games Development")]
-        CGD,
+        CGD = 15,
         [Description("Digital Advertising")]
-        DA,
+        DA = 16,
         [Description("Human Resource Management")]
-        HRM,
+        HRM = 17,
         [Description("International Buisness Management")]
-        IBM,
+        IBM = 18,
         [Description("International Relations")]
-        IR,
+        IR = 19,
         [Description("Information Technology: Business Information Systems")]
-        ITBIS,
+        ITBIS = 20,
         [Description("Information Technology: Cloud Computing")]
-        ITCC,
+        ITCC = 21,
         [Description("Information Technology: Internet Of Things")]
-        ITIOT,
+        ITIOT = 22,
         [Description("Information Technology: Information System Security")]
-        ITISS,
+        ITISS = 23,
         [Description("Information Technology: Mobile Technology")]
-        ITMBT,
+        ITMBT = 24,
         [Description("Information Technology: Network Computing")]
-        ITNC,
+        ITNC = 25,
         [Description("Marketing Management")]
-        MKT,
+        MKT = 26,
         [Description("Marketing Management: Digital Marketing")]
-        MKTDM,
+        MKTDM = 27,
         [Description("Multimedia Technology")]
-        MMT,
+        MMT = 28,
         [Description("Software Engineering")]
-        SE,
+        SE = 29,
         [Description("Tourist Management")]
-        TRM,
+        TRM = 30,
         [Description("Computer Engineering")]
-        CE,
+        CE = 31,
         [Description("Petroleoum Engineering")]
-        PE,
+        PE = 32,
         [Description("Electrical and Electronic Engineering")]
-        EEE,
+        EEE = 33,
         [Description("Mechatronic Engineering")]
-        ME,
+        ME = 34,
         [Description("Telecommunication Engineering")]
-        TE,
+        TE = 35,
         [Description("Animation")]
-        ANM,
+        ANM = 36,
         [Description("Industrial Design")]
-        ID,
+        ID = 37,
         [Description("Visual Effects")]
-        VFX,
+        VFX = 38,
     }
 
 

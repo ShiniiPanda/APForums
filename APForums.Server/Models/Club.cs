@@ -15,9 +15,17 @@ namespace APForums.Server.Models
         [Column("Name", TypeName = "nvarchar(255)")]
         public string Name { get; set; } = null!;
 
+        public ClubType Type { get; set; }
+
+        [Column("Abbreviation", TypeName = "nvarchar(20)")]
+        public string Abbreviation { get; set; } = null!;
+
         public string? Description { get; set; }
 
         public ClubStatus Status { get; set; }
+
+        [Column("Logo")]
+        public string? LogoPath { get; set; }
 
         // Relationship Navigators
 
@@ -25,7 +33,9 @@ namespace APForums.Server.Models
 
         public List<UserClub> UserClubs { get; } = new();
 
-        public ICollection<Event> Events = new List<Event>();
+        public ICollection<Event> Events { get; } = new List<Event>();
+
+        public ICollection<Forum> Forums { get;  } = new List<Forum>();
 
     }
 }

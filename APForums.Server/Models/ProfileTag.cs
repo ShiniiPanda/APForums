@@ -25,6 +25,8 @@ namespace APForums.Server.Models
 
         public List<User> Users { get; } = new();
 
+        public List<UserProfileTags> UserProfileTags { get; } = new();
+
 
     }
 }

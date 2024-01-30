@@ -2,10 +2,10 @@
 {
     public enum Degree
     {
-        LanguageCamp,
-        Foundation,
-        Diploma,
-        Undergraduate,
-        Postgraduate
+        LanguageCamp = 0,
+        Foundation = 1,
+        Diploma = 2,
+        Undergraduate = 3,
+        Postgraduate = 4
     }
 }

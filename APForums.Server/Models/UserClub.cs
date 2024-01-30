@@ -8,7 +8,11 @@ namespace APForums.Server.Models
     {
 
         public int UserId { get; set; }
+
+        public User User { get; set; } = null!;
         public int ClubId { get; set; }
+
+        public Club Club { get; set; } = null!;
 
         public ClubRole Role { get; set; }
 

@@ -3,6 +3,7 @@ using System;
 using APForums.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APForums.Server.Migrations
 {
     [DbContext(typeof(ForumsDbContext))]
-    partial class ForumsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230831134100_Added-Users-Tags-Joined-Navigation")]
+    partial class AddedUsersTagsJoinedNavigation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -56,7 +59,6 @@ namespace APForums.Server.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Abbreviation")
-                        .IsRequired()
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("Abbreviation");
 
@@ -76,10 +78,11 @@ namespace APForums.Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("Type")
+                    b.Property<string>("Type")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
+                        .HasColumnType("nvarchar(40)")
+                        .HasDefaultValue("SIG");
 
                     b.HasKey("Id");
 
@@ -126,10 +129,11 @@ namespace APForums.Server.Migrations
 
             modelBuilder.Entity("APForums.Server.Models.CommentImpression", b =>
                 {
-                    b.Property<int>("CommentId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("CommentId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastUpdated")
@@ -137,10 +141,16 @@ namespace APForums.Server.Migrations
                         .HasColumnType("datetime(6)")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Value")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("CommentId", "UserId");
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
 
                     b.HasIndex("UserId");
 
@@ -207,31 +217,11 @@ namespace APForums.Server.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("Title");
 
-                    b.Property<int>("Visibility")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
 
                     b.ToTable("events");
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.EventInterest", b =>
-                {
-                    b.Property<int>("EventId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("EventId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("event_interests");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Forum", b =>
@@ -251,7 +241,7 @@ namespace APForums.Server.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(256)")
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("Name");
 
                     b.Property<int>("Visibility")
@@ -311,10 +301,8 @@ namespace APForums.Server.Migrations
 
             modelBuilder.Entity("APForums.Server.Models.PostImpression", b =>
                 {
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastUpdated")
@@ -322,10 +310,19 @@ namespace APForums.Server.Migrations
                         .HasColumnType("datetime(6)")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Value")
+                    b.Property<int>("PostId")
                         .HasColumnType("int");
 
-                    b.HasKey("PostId", "UserId");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
 
                     b.HasIndex("UserId");
 
@@ -631,7 +628,7 @@ namespace APForums.Server.Migrations
                         .IsRequired();
 
                     b.HasOne("APForums.Server.Models.User", "User")
-                        .WithMany("CommentImpressions")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -663,38 +660,19 @@ namespace APForums.Server.Migrations
             modelBuilder.Entity("APForums.Server.Models.Event", b =>
                 {
                     b.HasOne("APForums.Server.Models.Club", "Club")
-                        .WithMany("Events")
+                        .WithMany()
                         .HasForeignKey("ClubId");
 
                     b.Navigation("Club");
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.EventInterest", b =>
-                {
-                    b.HasOne("APForums.Server.Models.Event", "Event")
-                        .WithMany("EventInterests")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("APForums.Server.Models.User", "User")
-                        .WithMany("EventInterests")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Event");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Forum", b =>
                 {
-                    b.HasOne("APForums.Server.Models.Club", "Club")
-                        .WithMany("Forums")
+                    b.HasOne("APForums.Server.Models.Club", "club")
+                        .WithMany()
                         .HasForeignKey("ClubId");
 
-                    b.Navigation("Club");
+                    b.Navigation("club");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Post", b =>
@@ -725,7 +703,7 @@ namespace APForums.Server.Migrations
                         .IsRequired();
 
                     b.HasOne("APForums.Server.Models.User", "User")
-                        .WithMany("PostImpressions")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -757,21 +735,17 @@ namespace APForums.Server.Migrations
 
             modelBuilder.Entity("APForums.Server.Models.UserActivity", b =>
                 {
-                    b.HasOne("APForums.Server.Models.Activity", "Activity")
+                    b.HasOne("APForums.Server.Models.Activity", null)
                         .WithMany("UserActivities")
                         .HasForeignKey("ActivityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("APForums.Server.Models.User", "User")
+                    b.HasOne("APForums.Server.Models.User", null)
                         .WithMany("UserActivities")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Activity");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.UserClub", b =>
@@ -795,21 +769,17 @@ namespace APForums.Server.Migrations
 
             modelBuilder.Entity("APForums.Server.Models.UserProfileTags", b =>
                 {
-                    b.HasOne("APForums.Server.Models.ProfileTag", "ProfileTag")
-                        .WithMany("UserProfileTags")
+                    b.HasOne("APForums.Server.Models.ProfileTag", null)
+                        .WithMany()
                         .HasForeignKey("ProfileTagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("APForums.Server.Models.User", "User")
-                        .WithMany("UserProfileTags")
+                    b.HasOne("APForums.Server.Models.User", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ProfileTag");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("forum_subscriptions", b =>
@@ -849,21 +819,12 @@ namespace APForums.Server.Migrations
 
             modelBuilder.Entity("APForums.Server.Models.Club", b =>
                 {
-                    b.Navigation("Events");
-
-                    b.Navigation("Forums");
-
                     b.Navigation("UserClubs");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Comment", b =>
                 {
                     b.Navigation("Impressions");
-                });
-
-            modelBuilder.Entity("APForums.Server.Models.Event", b =>
-                {
-                    b.Navigation("EventInterests");
                 });
 
             modelBuilder.Entity("APForums.Server.Models.Forum", b =>
@@ -878,19 +839,8 @@ namespace APForums.Server.Migrations
                     b.Navigation("Impressions");
                 });
 
-            modelBuilder.Entity("APForums.Server.Models.ProfileTag", b =>
-                {
-                    b.Navigation("UserProfileTags");
-                });
-
             modelBuilder.Entity("APForums.Server.Models.User", b =>
                 {
-                    b.Navigation("CommentImpressions");
-
-                    b.Navigation("EventInterests");
-
-                    b.Navigation("PostImpressions");
-
                     b.Navigation("Socials");
 
                     b.Navigation("UserActivities");
@@ -900,8 +850,6 @@ namespace APForums.Server.Migrations
                     b.Navigation("UserComments");
 
                     b.Navigation("UserPosts");
-
-                    b.Navigation("UserProfileTags");
                 });
 #pragma warning restore 612, 618
         }

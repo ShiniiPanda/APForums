@@ -1,7 +1,120 @@
-﻿@page "/"
+﻿@page "/home"
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.DTO.PagesDTO
+@using APForums.Client.Pages.Posts
+@using System.Text.Json
+@using System.Net
+@inject IUserService _userService
+@inject IActivityService _activityService
+@inject NavigationManager NavManager
 
-<h1>Hello, world!</h1>
+@if (response == null)
+{
+    <h2> Loading Home Page... </h2>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-6 p-3 flex flex-col">
+            <h2 class="text-lg md:text-xl lg:text-2xl font-serif text-primary font-semibold">
+                Hello There, <a class="hover:text-secondary" href="/profile/@Settings.authInfo.Id">@Settings.userInfo.Name</a>
+            </h2>
+            <hr class="w-full mt-1 border-2 border-solid border-secondary/60">
+            <h2 class="font-serif text-secondary text-base md\:text-lg lg:text-xl mt-3 md:mt-5 font-medium">Recent Activity</h2>
+            <div class="p-3 shadow-lg mt-1">
+                <div>
+                    @foreach (var activity in response.Data.Activities)
+                    {
+                        <div @key="activity.Id" class="flex flex-wrap items-center px-3 py-4 md:py-1 bg-primary/5 rounded-3xl my-1">
+                            @if (!activity.Read)
+                            {
+                                <div class="text-[10px] bg-primary text-primarytext rounded-3xl px-1 mr-1">
+                                    New
+                                </div>
+                            }
+                            <p class="font-medium text-xs md:text-sm lg:text-base mr-1">@activity.Message</p>
+                            @if (!activity.Read)
+                            {
+                                <button @onclick="@(async () => await MarkActivityRead(activity))" class="opacity-75 text-secondary text-xs md:text-sm">mark as read</button>
+                            }
+                        </div>
+                        
+                    }
+                </div>
+            </div>
+            <h2 class="font-serif font-medium text-secondary text-base md:text-lg lg:text-xl mt-3 md:mt-5">Recent Top Forum Posts</h2>
+            <div class="p-3 shadow-lg mt-1">
+                <div>
+                    @foreach (var post in response.Data.Posts)
+                    {
+                        @*<div class="flex flex-wrap px-3 py-1 bg-primary/5 rounded-3xl my-1">
+                            <p class="font-medium mr-1">@post.Title</p>
+                            <button class="opacity-75 text-secondary text-xs md:text-sm">mark as read</button>
+                        </div>*@
+                        <PostCard ShowForum="true" Post="post"/>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    
+}
 
-Welcome to your new app.
+@code {
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    private BasicHttpResponseWithData<HomePage> response = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        response = await _userService.GetUserHomePage();
+        if (response.Status == HttpStatusCode.Unauthorized)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/login");
+
+        } else if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            response = new();
+        }
+        //User user = null;
+        //var currentAuthInfo = Settings.authInfo;
+        //if (currentAuthInfo == null)
+        //{
+        //    await App.Current.MainPage.DisplayAlert("Whoopsie!", "Invalid auth token, please login again!", "Ok");
+        //    NavManager.NavigateTo("/login");
+        //    //user = User.GetDefaultUserInfo();
+        //} else
+        //{
+        //    user = await _userService.GetUserInfoAsync(currentAuthInfo.Id);
+        //    if (user == null)
+        //    {
+        //        await App.Current.MainPage.DisplayAlert("Whoopsie!", "Invalid User, please login again!", "Ok");
+        //        NavManager.NavigateTo("/login");
+        //    } else
+        //    {
+        //        var userJsonStr = JsonSerializer.Serialize(user);
+        //        SecureStorage.Default.Remove(nameof(Settings.userInfo));
+        //        await SecureStorage.Default.SetAsync(nameof(Settings.userInfo), userJsonStr);
+        //        Settings.userInfo = user;
+        //        userInfoStr = userJsonStr;
+        //        this.StateHasChanged();
+        //    }
+        //}
+
+        //userInfoStr = JsonSerializer.Serialize(Settings.userInfo);
+
+    }
+
+    private async Task MarkActivityRead(Activity activity)
+    {
+        if (activity.Read) return;
+        var markResponse = await _activityService.MarkActivityAsRead(activity.Id);
+        if (markResponse.Status != HttpStatusCode.OK) return;
+        activity.Read = true;
+    }
+
+}

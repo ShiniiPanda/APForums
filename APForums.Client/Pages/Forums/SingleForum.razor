@@ -1,0 +1,224 @@
+﻿@page "/forum/{Id:int}"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Pages.Posts
+@inject IForumService _forumService
+@inject IClubService _clubService
+@inject IPostService _postService
+@inject NavigationManager NavManager
+
+@if (forumResponse == null)
+{
+    <h2>Loading Forum Information...</h2>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-6 flex flex-col justify-center items-center ">
+            <h1 class="mt-4 text-primary text-lg md:text-xl lg:text-3xl font-bold font-serif text-center">@forumResponse.Data.Name</h1>
+            @if (forumResponse.Data.ClubId != null)
+            {
+                <a href="/club/@forumResponse.Data.ClubId"><h2 class="mt-1 text-secondary text-base md:text-lg lg:text-2xl font-serif text-center font-semibold">@forumResponse.Data.ClubName</h2></a>
+            }
+            @if (subscriptionStatus)
+            {
+                <button disabled="@SubscriptionButtonPressed" @onclick="@(async () => await HandleForumSubscribe())" class="mt-1 px-2 md:px-3 py-1 bg-secondary text-secondarytext rounded-2xl font-medium">
+                    Subscribed
+                    <i class="fa-solid fa-check fa-xs md:fa-sm"></i>
+                </button>
+            } else
+            {
+                <button disabled="@SubscriptionButtonPressed" @onclick="@(async () => await HandleForumSubscribe())" class="mt-1 px-2 md:px-3 py-1 bg-secondary text-secondarytext rounded-2xl font-medium">
+                    Subscribe
+                </button>
+            }
+            <div class="flex flex-col justify-center items-center mt-2 md:mt-3 max-w-2xl w-full">
+                <hr class="border-2 border-solid border-secondary/80 w-full">
+                <div class="px-2 mt-4 mb-8">
+                    <div>
+                        @forumResponse.Data.Description
+                    </div>
+                </div>
+                <div class="flex w-full items-center flex-wrap">
+                    <label class="text-primary text-sm md:text-base lg:text-xl font-medium mr-2">Search</label>
+                    <input class="grow max-w-2xl shadow-md rounded-lg border border-secondary/50 mr-2 px-2 py-1" type="text" @bind-value="searchQuery" />
+                    <button class="rounded-lg text-secondarytext bg-secondary px-2 py-1 font-medium text-center w-full max-w-4xl md:w-fit mt-2 md:mt-0" @onclick=@(async () => await HandleSearch())>Go!</button>
+                </div>
+                <div class="mt-3 flex w-full items-center justify-evenly max-w-4xl px-2">
+                    <button disabled="@paginationUpdateHappening" 
+                        class="grow @(sortType == 0 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-l-lg" 
+                        @onclick=@(async () => await UpdateSortType(0))>Latest</button>
+                    <button disabled="@paginationUpdateHappening" 
+                        class="grow @(sortType == 1 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext" 
+                        @onclick=@(async () => await UpdateSortType(1))>Impressions</button>
+                    <button disabled="@paginationUpdateHappening" 
+                        class="grow @(sortType == 2 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-r-lg" 
+                        @onclick=@(async () => await UpdateSortType(2))>Oldest</button>
+                </div>
+            </div>
+            <div class="flex flex-col mt-6 mx-4 p-4 w-full">
+                @if (paginationResponse == null)
+                {
+                    <h3>Loading Forum Posts...</h3>
+                } else
+                {
+                    <div class="mx-2 md:mx-3 flex justify-between">
+                        @if (currentPage > 1)
+                        {
+                            <button class="ml-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+                        }
+                        <div class="ml-auto">
+                            <a class="px-2 md:px-3 py-1 mr-2 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" href="/forum/@forumResponse.Data.Id/addpost">
+                                <span>Add Post</span>
+                                <i class="ml-1 fa-solid fa-plus fa-xs md:fa-sm"/>
+                            </a>
+                            @if (currentPage < paginationResponse.Data.TotalPages)
+                            {
+                                <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                            }
+                        </div>
+                    </div>
+                    <div class="m-2 p-2 flex flex-col">
+                        @foreach (var post in paginationResponse.Data.Items)
+                        {
+                            <PostCard Post="post"/>
+                        }
+                        @if (paginationResponse.Data.TotalItems == 0)
+                        {
+                            <p class="font-bold text-base md:text-lg lg:text-xl text-secondary text-center">This forum has no posts, yet!</p>
+                        }
+                    </div>
+                    <div class="mx-2 md:mx-3 mt-2 md:mt-3 flex justify-between">
+                        @if (currentPage > 1)
+                        {
+                            <button class="ml-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+                        }
+                        <div class="ml-auto">
+                            @if (currentPage < paginationResponse.Data.TotalPages)
+                            {
+                                <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public BasicHttpResponseWithData<Forum> forumResponse = null;
+
+    private BasicHttpResponseWithData<PaginatedList<Post>> paginationResponse = null;
+
+    private bool subscriptionStatus = false;
+
+    private readonly static int pageSize = 5;
+
+    private int currentPage = 1;
+
+    private int sortType = 0;
+
+    private string searchQuery = "";
+
+    private bool Loading = true;
+
+    private bool paginationUpdateHappening = true;
+
+    private bool SubscriptionButtonPressed = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        forumResponse = await _forumService.GetForum(Id);
+        if (forumResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", forumResponse.Error, "Ok!");
+            NavManager.NavigateTo("/home");
+            return;
+        }
+        subscriptionStatus = await GetForumSubscriptionStatus();
+        await UpdatePaginatedRespose();
+        Loading = false;
+    }
+
+    private async Task UpdatePaginatedRespose()
+    {
+        paginationUpdateHappening = true;
+        paginationResponse = await _postService.GetForumPosts(Id, currentPage, sort: sortType, size: pageSize, search: searchQuery);
+        if (paginationResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie", paginationResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        paginationUpdateHappening = false;
+    }
+
+    private async Task<bool> GetForumSubscriptionStatus()
+    {
+        var response = await _forumService.GetUserSubscriptionStatus(Settings.authInfo.Id, Id);
+        if (response.Status == HttpStatusCode.OK) return response.Data;
+        return false;
+    }
+
+    private async Task Backwards()
+    {
+        if (currentPage == 1) return;
+        currentPage--;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task Forwards()
+    {
+        if (currentPage >= paginationResponse.Data.TotalPages) return;
+        currentPage++;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task UpdateSortType(int newType)
+    {
+        sortType = newType;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task HandleSearch()
+    {
+        currentPage = 1;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task HandleForumSubscribe()
+    {
+        SubscriptionButtonPressed = true;
+        BasicHttpResponse response;
+        var successMessage = "";
+
+        if (subscriptionStatus)
+        {
+            //If subscribed, then handle unsubscription
+            response = await _forumService.Unsubscribe(Settings.authInfo.Id, Id);
+            successMessage = $"You have successfully unsubscribed to {forumResponse.Data.Name}!";
+        } else
+        {
+            //If unsubscribed, then handle subscriptions
+            response = await _forumService.Subscribe(Settings.authInfo.Id, Id);
+            successMessage = $"You have successfully subscribed to {forumResponse.Data.Name}!";
+        }
+
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie", response.Error, "Ok");
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", successMessage, "Ok");
+            subscriptionStatus = !subscriptionStatus;
+        }
+        SubscriptionButtonPressed = false;
+    }
+}

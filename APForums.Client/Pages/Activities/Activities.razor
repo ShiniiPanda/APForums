@@ -1,0 +1,133 @@
+﻿@page "/activites"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject IActivityService _activityService
+@inject NavigationManager NavManager
+
+
+
+@if (paginationResponse == null)
+{
+    <h2> Loading User Activities... </h2>
+}
+else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <h1 class="mt-4 text-base md:text-lg lg:text-2xl font-serif font-bold text-primary text-center md:text-start">My Activities</h1>
+        <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+        <div class="mt-3 flex w-full items-center justify-evenly px-2">
+            <button class="grow @(sortType == 0 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-l-lg"
+            @onclick=@(async () => await ChangeActivityType(0))>
+                All
+            </button>
+            <button class="grow @(sortType == 1 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext"
+            @onclick=@(async () => await ChangeActivityType(1))>
+                Unread
+            </button>
+            <button class="grow @(sortType == 2 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-r-lg"
+            @onclick=@(async () => await ChangeActivityType(2))>
+                Read
+            </button>
+        </div>
+        <div class="p-3 shadow-lg mt-2">
+            <div>
+                @foreach (var activity in paginationResponse.Data.Items)
+                {
+                    <div @key="activity.Id" class="flex flex-wrap items-center px-3 py-4 md:py-1 bg-primary/5 rounded-3xl my-1">
+                        @if (!activity.Read)
+                        {
+                            <div class="text-[10px] bg-primary text-primarytext rounded-3xl px-1 mr-1">
+                                New
+                            </div>
+                        }
+                        <p class="font-medium text-xs md:text-sm lg:text-base mr-1">@activity.Message</p>
+                        @if (!activity.Read)
+                        {
+                            <button @onclick="@(async () => await MarkActivityRead(activity))" class="opacity-75 text-secondary text-xs md:text-sm">mark as read</button>
+                        }
+                    </div>
+
+                }
+            </div>
+        </div>
+
+        <div class="mx-2 md:mx-3 mt-2 md:mt-3 flex justify-between">
+            @if (currentPage > 1)
+            {
+                <button class="ml-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+            }
+            <div class="ml-auto">
+                @if (currentPage < paginationResponse.Data.TotalPages)
+                {
+                    <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                }
+            </div>
+        </div>
+    </div>
+
+}
+
+@code {
+
+    private BasicHttpResponseWithData<PaginatedList<Activity>> paginationResponse = null;
+
+    private readonly static int pageSize = 10;
+
+    private int currentPage = 1;
+
+    // Basically:
+    // 0 => All activities, ordered by latest and unread are bubbled on top
+    // 1 => Only unread activities are fetched.
+    // 2 => Only read activites are fetched (maybe it's useful? :))
+    // By default, we fetch 0. The user can control which one to fetch through the UI.
+    private int sortType = 0;
+
+    private string SelectedTypeCSS = "color: blue;";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task UpdatePaginatedRespose()
+    {
+        paginationResponse = await _activityService.GetUserActivities(page: currentPage, size: pageSize, type: sortType);
+        if (paginationResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie", paginationResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+    private async Task Backwards()
+    {
+        if (currentPage == 1) return;
+        currentPage--;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task Forwards()
+    {
+        if (currentPage >= paginationResponse.Data.TotalPages) return;
+        currentPage++;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task ChangeActivityType(int newType)
+    {
+        sortType = newType;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task MarkActivityRead(Activity activity)
+    {
+        if (activity.Read) return;
+        var markResponse = await _activityService.MarkActivityAsRead(activity.Id);
+        if (markResponse.Status != HttpStatusCode.OK) return;
+        activity.Read = true;
+    }
+}

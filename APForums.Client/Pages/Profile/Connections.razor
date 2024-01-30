@@ -1,0 +1,94 @@
+﻿@page "/profile/connections/{Id:int}/{Type:int}"
+@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO.PagesDTO
+@inject NavigationManager NavManager
+@inject IUserService _userService
+
+
+@if (Loading)
+{
+    <h1>Loading User Connections...</h1>
+}
+else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="mt-4 p-4 flex flex-col items-center md:items-start">
+            <div class="flex items-center font-serif">
+                @if (Type == 0)
+                {
+                    <p class="text-primary text-base md:text-xl lg:text-2xl font-medium">Followers of </p>
+                }
+                else
+                {
+                    <p class="text-primary text-base md:text-xl lg:text-2xl font-medium">People that follow</p>
+                }
+                <a class="text-secondary text-base md:text-xl lg:text-2xl font-semibold ml-1 md:ml-2" href="/profile/@User.Id">@User.Name</a>
+            </div>
+            <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+            <div class="mt-4 p-2 flex flex-col md:flex-row items-center md:flex-wrap">
+                @foreach(var connection in response.Data)
+                {
+                    <BasicUserCard User="connection"/>   
+                }
+                @if (response.Data.Count() == 0)
+                {
+                    <a class="text-secondary text-sm md:text-base lg:text-lg font-semibold" href="/profile/@User.Id">@User.Name&nbsp;</a>
+                    @if (Type == 0)
+                    {
+
+                        <p class="text-primary text-sm md:text-base lg:text-lg font-medium">does not have any followers!</p>
+                    }
+                    else
+                    {
+                        <p class="text-primary text-sm md:text-base lg:text-lg font-medium">does not follow anyone!</p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+
+    // 0 ==> Shows the people that follow that certain individual
+    // 1 ==> Shows the people that are followed by that certain individual
+    [Parameter]
+    public int Type { get; set; } = 0;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private User User = null;
+
+    private BasicHttpResponseWithData<IEnumerable<BasicUser>> response = null;
+
+    private bool Loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        User = await _userService.GetUserInfoAsync(Id);
+        if (User == null)
+        {
+            NavManager.NavigateTo("/home");
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", "Unable to load information for specified user!", "Ok");
+        }
+        var typeStr = Type == 0 ? "Followers" : "Following";
+        response = await _userService.GetUserConnections(Id, typeStr);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo($"/profile/{Id}");
+            return;
+        }
+        Loading = false;
+    }
+}

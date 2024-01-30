@@ -1,0 +1,76 @@
+﻿@page "/settings/application"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+@inject IJSRuntime _jsRuntime
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-md py-4 px-8">
+    <SettingsNavBar Category="Application"></SettingsNavBar>
+    <div class="p-2 my-6 flex flex-col items-center md:items-start">
+        <div class="flex items-center mt-6 text-primary font-serif ">
+            <h1 class="md:text-2xl mr-2">Color Scheme</h1>
+        </div>
+        <hr class="border-2 border-secondary/80 border-solid w-full" />
+        <div class="mt-2 p-2 flex flex-col items-center md:items-start">
+            <h3 class="text-base md:text-lg text-primary font-semibold mr-2">Primary Colour: </h3>
+            <select class="text-sm md:text-md font-medium px-2 md:px-3 py-1" @onchange="(args) => HandlePrimaryColorChange(args)">
+                @foreach(var Set in Settings.SelectablePrimaryColors)
+                {
+                    <option selected="@(Settings.PrimaryColor == Set.Key)" value="@Set.Key">@Set.Key</option>
+                }
+            </select>
+            <h3 class="mt-2 text-base md:text-lg text-secondary font-semibold mr-2">Secondary Colour: </h3>
+            <select class="text-sm md:text-md font-medium px-2 md:px-3 py-1" @onchange="(args) => HandleSecondaryColorChange(args)">
+                @foreach (var Set in Settings.SelectableSecondaryColors)
+                {
+                    <option selected="@(Settings.SecondaryColor == Set.Key)" value="@Set.Key">@Set.Key</option>
+                }
+            </select>
+            @*<button class="mt-3 px-3 py-1 bg-primary text-primarytext" @onclick=@(() => Settings.ClearColorCache())>Clear Color Cache</button>*@
+        </div>
+    </div>
+    
+</div>
+
+
+@code {
+
+    private string GetImageURL()
+    {
+        if (string.IsNullOrEmpty(Settings.userInfo.Picture))
+        {
+            return $"/images/profile/default_1.png";
+        }
+        else
+        {
+            return $"/images/profile/{Settings.userInfo.Picture}";
+        }
+    }
+
+    private async Task HandlePrimaryColorChange(ChangeEventArgs args)
+    {
+        var stringValue = args.Value.ToString();
+        if (!Settings.SelectablePrimaryColors.ContainsKey(stringValue))
+        {
+            return;
+        }
+        var newColor = Settings.SelectablePrimaryColors[stringValue];
+        Settings.PrimaryColor = stringValue;
+        var secondary = Settings.SelectableSecondaryColors[Settings.SecondaryColor];
+        await _jsRuntime.InvokeVoidAsync("setColors", newColor.RGBColor,secondary.RGBColor);
+        Settings.CacheColors();
+    }
+
+    private async Task HandleSecondaryColorChange(ChangeEventArgs args)
+    {
+        var stringValue = args.Value.ToString();
+        if (!Settings.SelectableSecondaryColors.ContainsKey(stringValue))
+        {
+            return;
+        }
+        var newColor = Settings.SelectableSecondaryColors[stringValue];
+        Settings.SecondaryColor = stringValue;
+        var primary = Settings.SelectablePrimaryColors[Settings.PrimaryColor];
+        await _jsRuntime.InvokeVoidAsync("setColors", primary.RGBColor, newColor.RGBColor);
+        Settings.CacheColors();
+    }
+}

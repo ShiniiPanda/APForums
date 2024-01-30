@@ -1,0 +1,136 @@
+﻿@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using System.ComponentModel.DataAnnotations
+@using System.Net
+@inject IPostService _postService
+
+<div class="flex flex-col items-center w-full mt-4">
+    <div class="hover:cursor-auto w-full justify-center flex grow max-w-5xl items-center bg-secondary text-base md:text-lg lg:text-xl text-secondarytext px-2 md:px-4 lg:px-6 py-2 transform hover:scale-102 transition-transform duration-300" @onclick="@(() => ShowNewCommentBox = !ShowNewCommentBox)">
+        <h3 class="mr-3">Add New Comment</h3>
+        <i class="mt-1 fa-solid fa-chevron-down text-secondarytext fa-sm transition-transform duration-300 @(ShowNewCommentBox ? "fa-rotate-180" : "")"></i>
+    </div>
+    @if(ShowNewCommentBox)
+    {
+        <div class="w-full mt-5 max-w-3xl">
+            <EditForm Model="NewCommentModel" OnValidSubmit="HandleNewCommentSubmit">
+                <DataAnnotationsValidator />
+                <InputTextArea placeholder="New Comment..." class="placeholder:text-center px-2 py-2 rounded-lg h-24 shadow-md border-2 border-solid border-secondary w-full" @bind-Value="NewCommentModel.Content"></InputTextArea>
+                <ValidationMessage class="w-full text-center" For="@(() => NewCommentModel.Content)" />
+                <button class="w-full px-2 md:px-3 py-1 font-medium rounded-lg text-primarytext bg-primary text-xs md:text-sm lg:text-base" type="submit">Add Comment</button>
+            </EditForm>
+        </div>
+    }
+    <div class="mt-6 w-full">
+        <div class="mx-2 mb-3 md:mx-3 flex justify-between">
+            @if (PageNumber > 1)
+            {
+                <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+            }
+            <div class="ml-auto">
+                @if (PageNumber < TotalPages)
+                {
+                    <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                }
+            </div>
+        </div>
+        @foreach (var comment in PageComments)
+        {
+            <SingleComment Comment="comment"></SingleComment>
+        }
+        <div class="mx-2 mt-3 md:mx-3 flex justify-between">
+            @if (PageNumber > 1)
+            {
+                <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+            }
+            <div class="ml-auto">
+                @if (PageNumber < TotalPages)
+                {
+                    <button class="px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public List<Comment> Comments { get; set; }
+
+    [Parameter]
+    public int MaxPerPage { get; set; }
+
+    [CascadingParameter]
+    public int PostId { get; set; }
+
+    private List<Comment> PageComments { get; set; } = new List<Comment>();
+
+    private int PageNumber { get; set; } = 1;
+
+    private int TotalPages => (int)Math.Ceiling(Comments.Count / (double)MaxPerPage);
+
+    private bool ShowNewCommentBox = false;
+
+    private CommentModel NewCommentModel { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        UpdatedPageComments();
+    }
+
+    private void Backwards()
+    {
+        if (PageNumber > 1)
+        {
+            PageNumber--;
+            UpdatedPageComments();
+        }
+    }
+
+    private void Forwards()
+    {
+        if (PageNumber < TotalPages)
+        {
+            PageNumber++;
+            UpdatedPageComments();
+        }
+    }
+
+    private void UpdatedPageComments()
+    {
+        int startIndex = (PageNumber - 1) * MaxPerPage;
+        int endIndex = Math.Min(startIndex + MaxPerPage, Comments.Count);
+        PageComments = Comments.Skip(startIndex).Take(endIndex - startIndex).ToList();
+    }
+
+    private async Task HandleNewCommentSubmit()
+    {
+        var NewComment = new Comment();
+        NewComment.Content = NewCommentModel.Content;
+        NewComment.User = new BasicUser { Id = Settings.authInfo.Id };
+        NewComment.PostId = PostId;
+        var response = await _postService.AddPostComment(NewComment);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            return;
+        }
+        NewCommentModel.Content = "";
+        ShowNewCommentBox = false;
+        Comments.Add(response.Data);
+        PageNumber = TotalPages;
+        UpdatedPageComments();
+    }
+
+    private class CommentModel
+    {
+        [Required]
+        [StringLength(512, ErrorMessage = "Comments cannot exceed 512 characters!")]
+        public string Content { get; set; }
+
+    }
+}

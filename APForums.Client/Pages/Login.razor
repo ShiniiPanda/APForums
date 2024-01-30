@@ -1,0 +1,65 @@
+﻿@page "/login"
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data
+@using APForums.Client.Data.Storage
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using System.IdentityModel.Tokens.Jwt
+@using System.Security.Claims
+@using System.Text.Json
+@inject ILoginService _loginService
+@inject IUserService _userService
+@inject NavigationManager NavManager
+@layout LoginLayout
+
+<div class="relative flex items-center justify-center h-full w-full">
+    <div class="relative bg-fuchsia-900/10 w-72 h-56">
+        <div class="absolute inset-x-4 inset-y-4 bg-violet-900/10 w-64 h-48">
+            <div class="flex flex-col items-center justify-center w-full h-full">
+                <div class="text-center text-lg md:text-xl lg:text-2xl font-bold text-fuchsia-300 mb-3">
+                    Welcome
+                </div>
+                <EditForm class="flex flex-col justify-center items-center" Model="@loginModel" OnValidSubmit="@HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="mb-5 flex flex-col -ml-6 items-center">
+                        <div>
+                            <span class="fa-solid fa-user mr-1 w-5 text-fuchsia-400/90"></span>
+                            <InputText placeholder="TP Identity..." class="px-2 py-1 text-center text-sm" @bind-Value="loginModel.Username" />
+                        </div>
+                        <ValidationMessage For="@(() => loginModel.Username)" class="text-pink-600 text-xs ml-7" />
+                            <div>
+                                <span class="fa-solid fa-key mr-1 w-5 text-fuchsia-400/90"></span>
+                                <InputText type="password" placeholder="Password..." DisplayName="Password" class="mt-2 px-2 py-1 text-center text-sm" @bind-Value="loginModel.Password" />
+                            </div>
+                        <ValidationMessage For="@(() => loginModel.Password)" class="text-pink-600 text-xs ml-7" />
+                    </div>
+                    <button class="w-32 py-1 text-white bg-purple-400/50 text-sm font-medium"  type="submit">Login</button>
+                </EditForm>
+            </div>
+        </div> 
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginModel = new();
+
+    private AuthResponse response = null;
+
+    private async Task HandleValidSubmit()
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        response = await _loginService.Auth(loginModel);
+        if (response.Status != AuthStatus.Success)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", "Invalid Login Attempt :/!", "Ok"  );
+        } else
+        {
+            var token = tokenHandler.ReadToken(response.AccessToken) as JwtSecurityToken;
+
+            await _loginService.SetAuthInfo(response.AccessToken, response.RefreshToken);
+            await _userService.UpdateCachedUserInfo(Settings.authInfo.Id);
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+}

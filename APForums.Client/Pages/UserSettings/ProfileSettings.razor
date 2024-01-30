@@ -1,0 +1,58 @@
+﻿@page "/settings/profile"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-md py-4 px-8">
+    <SettingsNavBar Category="Profile"></SettingsNavBar>
+    <div class="p-2 my-6 flex flex-col items-center md:items-start">
+        <div class="flex items-center text-primary font-serif ">
+            <h1 class="mr-2 md:text-2xl">Profile Picture</h1>
+            <i class="fa-solid fa-image" />
+        </div>
+        <hr class="border-2 border-secondary/80 border-solid w-full" />
+        <div class="p-2 flex items-center">
+            @if (Settings.userInfo != null)
+            {
+                <img class="h-20 w-20 md:h-32 md:w-32 rounded-3xl my-2 shadow-md" src="@GetImageURL()" alt="Profile Picture" />
+            }
+            @*<img src="@($"/images/profile/{Settings.userInfo.Picture}")"></img>*@
+            <div class="ml-2 md:ml-4 flex flex-col space-y-2 md:space-y-3 text-center">
+                <a class="text-sm md:text-base font-medium px-2 md:px-3 py-1 text-secondarytext bg-secondary transform hover:scale-105 transition-transform duration-300 rounded-lg" href="/settings/profile/picture">Change Profile Picture</a>
+                <button class="text-sm md:text-base font-medium px-2 md:px-3 py-1 text-secondarytext bg-secondary transform hover:scale-105 transition-transform duration-300 rounded-lg">Revert to Default</button>
+            </div>
+        </div>
+        <div class="flex items-center mt-6 text-primary font-serif ">
+            <h1 class="md:text-2xl mr-2">Profile Tags</h1>
+            <i class="fa-solid fa-user-tag" />
+        </div>
+        <hr class="border-2 border-secondary border-solid w-full" />
+        <div class="mt-2 p-2 flex items-center">
+            <a class="text-sm md:text-base font-medium px-2 md:px-3 py-1 text-secondarytext bg-secondary transform hover:scale-105 transition-transform duration-300 rounded-lg" href="/settings/profile/tags">Manage Profile Tags</a>
+        </div>
+        <div class="flex items-center mt-6 text-primary font-serif ">
+            <h1 class="mr-2 md:text-2xl">Socials</h1>
+            <i class="fa-solid fa-hashtag" />
+        </div>
+        <hr class="border-2 border-secondary/80 border-solid w-full" />
+        <div class="mt-2 p-2 flex items-center">
+            <a class="text-sm md:text-base font-medium px-2 md:px-3 py-1 text-secondarytext bg-secondary transform hover:scale-105 transition-transform duration-300 rounded-lg" href="/settings/profile/socials">Manage Social Links</a>
+        </div>
+    </div>
+    
+</div>
+
+
+@code {
+
+    private string GetImageURL()
+    {
+        if (string.IsNullOrEmpty(Settings.userInfo.Picture))
+        {
+            return $"/images/profile/default_1.png";
+        }
+        else
+        {
+            return $"/images/profile/{Settings.userInfo.Picture}";
+        }
+    }
+}

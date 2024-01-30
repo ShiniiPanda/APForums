@@ -1,0 +1,71 @@
+﻿@page "/settings/profile/picture"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.Structures
+@inject IUserService _userService
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-md py-4 px-8">
+    <SettingsNavBar Category="Profile"></SettingsNavBar>
+    <div class="p-2 my-6 flex flex-col items-center md:items-start">
+        <h1 class="md:text-2xl text-primary font-serif">Manage Profile Picture</h1>
+        <hr class="w-full border-2 border-secondary/80 border-solid" />
+        <div class="mt-2 mb-4 p-2 flex flex-wrap">
+            @foreach (var name in User.Pictures)
+            {
+                <div @key="name" @onclick="@(() => selectedPicture = name)">
+                    <img class="@(selectedPicture.Equals(name) ? selectedCSS : "") w-20 h:20 md:w-32 md:h-32 rounded-lg transform hover:scale-105 transition-transform duration-300 mr-1 mt-1 md:mr-2 md:mt-2" src="@($"/images/profile/{name}")" />
+                </div>
+            }
+        </div>
+        <button class="px-3 py-1 bg-secondary rounded-lg text-white transform hover:scale-105 transition-transform duration-300" @onclick="HandlePictureChange" disabled="@ButtonPressed">Change Picture</button>
+    </div>
+</div>
+
+@code {
+
+    private string selectedPicture = string.Empty;
+
+    private string selectedCSS = "border-4 border-solid border-primary";
+
+    private BasicHttpResponse response = null;
+
+    private bool ButtonPressed = false;
+
+    protected override void OnInitialized()
+    {
+        selectedPicture = GetImageName();
+    }
+
+    private string GetImageName()
+    {
+        if (string.IsNullOrEmpty(Settings.userInfo.Picture))
+        {
+            return "default_1.png";
+        }
+        else
+        {
+            return Settings.userInfo.Picture;
+        }
+    }
+
+    private async Task HandlePictureChange()
+    {
+        if (Settings.authInfo == null) return;
+        if (selectedPicture.Equals(GetImageName())) return;
+        ButtonPressed = true;
+        response = await _userService.UpdatePicture(Settings.authInfo.Id, selectedPicture);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            await _userService.UpdateCachedUserInfo(Settings.authInfo.Id);
+            await App.Current.MainPage.DisplayAlert("Success", "You have successfully changed your profile picture!", "Ok");
+            Settings.UpdateUserInfo();
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+        ButtonPressed = false;
+    }
+  }
+

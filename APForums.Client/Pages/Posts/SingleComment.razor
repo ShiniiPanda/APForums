@@ -1,0 +1,167 @@
+﻿@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using System.Net
+@inject IPostService _postService
+
+<div class="shadow-lg border border-double border-secondary rounded-3xl p-4 my-3 shadow-primary/20 w-full">
+    <div class="flex flex-col items-center md:flex-row md:flex-wrap">
+        <a href="/profile/@Comment.User.Id">
+            <div class="flex flex-col justify-center w-48 items-center py-3 px-2 border border-secondary rounded-3xl">
+                <img class="w-16 h-16 rounded-3xl" src="@($"/images/profile/{Comment.User.Picture}")">
+                <p class="mt-1 text-xs md:text-sm lg:text-base text-center font-semibold hover:text-secondary">@Comment.User.Name</p>
+                <p class="text-xs md:text-sm font-medium hover:text-secondary">@Comment.User.TPNumber</p>
+            </div>
+        </a>
+        <div class="flex flex-col max-w-5xl">
+            <div class="mt-2 px-3 text-xs md:text-sm opacity-75">
+                posted @Comment.GetCommentDate()
+            </div>
+            <div class="mt-2 mb-4 px-3 text-xs md:text-sm lg:text-base">
+                @Comment.Content
+            </div>
+            <div class="px-3 mb-1 flex flex-wrap mt-auto">
+                <div disabled="ImpressionButtonPressed" class="mr-3 hover:cursor-pointer @(CurrentImpression == 0 ? "text-secondary hover:text-primary" : "hover:text-secondary")" @onclick="@(async () => await HandleImpressionChange(0))"><i class="fa-solid fa-arrow-up fa-xs md:fa-sm"></i> @CommentImpressions.FirstOrDefault(p => p.Value == 0).Impressions.Count() </div>
+                <div disabled="ImpressionButtonPressed" class="mr-3 hover:cursor-pointer @(CurrentImpression == 1 ? "text-secondary hover:text-primary" : "hover:text-secondary")" @onclick="@(async () => await HandleImpressionChange(1))"><i class="fa-solid fa-arrow-down fa-xs md:fa-sm"></i> @CommentImpressions.FirstOrDefault(p => p.Value == 1).Impressions.Count() </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*<h3>@Comment.Content</h3>
+<br />
+<br />
+<div>
+    <button style="@(CurrentImpression == 0 ? ImpressionSelectedCSS : "")" disabled="@ImpressionButtonPressed" @onclick="@(()=> HandleImpressionChange(0))"><span>Upvotes: @CommentImpressions.Single(p => p.Value == 0).Impressions.Count()</span></button>
+    <button style="@(CurrentImpression == 1 ? ImpressionSelectedCSS : "")" disabled="@ImpressionButtonPressed" @onclick="@(()=> HandleImpressionChange(1))"><span>Downvote: @CommentImpressions.Single(p => p.Value == 1).Impressions.Count()</span></button>
+    <br />
+    @compID
+</div>*@
+
+@code {
+    [Parameter]
+    public Comment Comment { get; set; }
+
+    // -1 means they have no impression, 0 means upvoted, 1 means downvoted, and etc if there's more..
+    private int CurrentImpression = -1;
+
+    private int compID = new Random().Next(300);
+
+    private List<ImpressionGroup<CommentImpression>> CommentImpressions = new();
+
+    private bool ImpressionButtonPressed = false;
+
+    protected override void OnParametersSet()
+    {
+        CurrentImpression = -1;
+        CommentImpressions = Comment.Impressions.GroupBy(i => i.Value).Select(i => new ImpressionGroup<CommentImpression>
+            {
+                Value = i.Key,
+                Impressions = i.ToList()
+            }).ToList();
+
+        UpdateCommentImpression();
+    }
+
+    private void UpdateCommentImpression()
+    {
+        // Check if the two primary types of impressions are here, if one of them is not found then we create an empty List.
+        // Otherwise, if we have a list already, then we check if user has any impression in the list to set the current impression.
+        var upvotes = CommentImpressions.SingleOrDefault(g => g.Value == 0);
+        var downvotes = CommentImpressions.SingleOrDefault(g => g.Value == 1);
+
+        if (upvotes == null)
+        {
+            CommentImpressions.Add(new ImpressionGroup<CommentImpression>
+                {
+                    Value = 0,
+                    Impressions = new List<CommentImpression>()
+                });
+        }
+        else if (CurrentImpression == -1)
+        {
+            if (upvotes.Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id) != null) CurrentImpression = 0;
+        }
+
+        if (downvotes == null)
+        {
+            CommentImpressions.Add(new ImpressionGroup<CommentImpression>
+                {
+                    Value = 1,
+                    Impressions = new List<CommentImpression>()
+                });
+        }
+        else if (CurrentImpression == -1)
+        {
+            if (downvotes.Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id) != null) CurrentImpression = 1;
+
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleImpressionChange(int NewImpression)
+    {
+        ImpressionButtonPressed = true;
+        BasicHttpResponse response;
+
+        if (CurrentImpression == -1) // User did not make an impression on the post yet
+        {
+            // Create a new comment impression record
+            var impression = new CommentImpression
+                {
+                    UserId = Settings.authInfo.Id,
+                    CommentId = Comment.Id,
+                    Value = NewImpression
+                };
+
+            // Add the impression
+            response = await _postService.AddCommentImpression(impression);
+            if (response.Status == HttpStatusCode.OK)
+            {
+                CurrentImpression = NewImpression;
+                CommentImpressions.First(p => p.Value == NewImpression).Impressions.Add(impression);
+                Comment.Impressions.Add(impression);
+            }
+
+        }
+        else // User has an impression already
+        {
+            // Get the value of the current impression
+            var impression = CommentImpressions.FirstOrDefault(pi => pi.Value == CurrentImpression)
+            .Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id);
+
+            // If the new impression is the same as the current one, we remove it entirely
+            if (CurrentImpression == NewImpression)
+            {
+                // Remove the impression
+                response = await _postService.RemoveCommentImpression(impression);
+                if (response.Status == HttpStatusCode.OK)
+                {
+                    CurrentImpression = -1; // Reset current impression to -1
+                    CommentImpressions.First(p => p.Value == NewImpression).Impressions.Remove(impression);
+                    Comment.Impressions.Remove(impression); // Update the main object impressions
+                }
+            }
+            else // If it's a different impression than the current one, then we modify the value in the server
+            {
+                impression.Value = NewImpression; // add the new value
+                response = await _postService.AddCommentImpression(impression); // The add method updates the value in the database
+                if (response.Status == HttpStatusCode.OK)
+                {
+                    CommentImpressions.First(p => p.Value == CurrentImpression).Impressions.Remove(impression);
+                    CurrentImpression = NewImpression; // Set current impression to new one
+                    CommentImpressions.First(p => p.Value == CurrentImpression).Impressions.Add(impression);
+                    Comment.Impressions.Where(i => i.UserId == impression.UserId && i.CommentId == impression.CommentId).FirstOrDefault().Value = NewImpression;
+                }
+            }
+        }
+        if (response.Status != HttpStatusCode.OK) // Somethign went wrong.. :/
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+        else
+        {
+            UpdateCommentImpression(); // If nothing went wrong, then just update the UI!
+        }
+        ImpressionButtonPressed = false;
+    }
+}

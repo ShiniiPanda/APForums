@@ -1,0 +1,62 @@
+﻿@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject NavigationManager NavManager
+@inject IClubService _clubService
+
+
+<div class="mb-4">
+    <div class="flex justify-between grow max-w-3xl items-center bg-secondary text-base md:text-lg lg:text-xl text-secondarytext px-2 md:px-4 lg:px-6 py-2 transform hover:scale-102 transition-transform duration-300" @onclick="@(() => showList = !showList)">
+        <h3 class="mr-3">@GetGroupName()</h3>
+        <i class="mt-1 fa-solid fa-chevron-down text-secondarytext fa-sm transition-transform duration-300 @(showList ? "fa-rotate-180" : "")"></i>
+    </div>
+    <div class="mt-2 p-2">
+        @if (showList == true)
+        {
+            <div class="flex flex-col md:flex-wrap md:flex-row">
+                @foreach (var club in ClubGroup.Clubs)
+                {   
+                    <a href="/club/@club.Id">
+                        <div class="shadow-xl flex flex-wrap justify-center mr-3 mt-3 rounded-3xl bg-transparent transform hover:scale-101 transition-transform duration-300">
+                            <img src="@($"/images/club/{club.Logo}")" class="lg:border-r-2 border-solid border-primary w-16 h-16 md:h-24 md:w-24 lg:h-48 lg:w-48 rounded-r-xl">
+                            <div class="ml-1 mt-3 flex flex-col border-2 lg:border-l-0 border-solid border-primary rounded-2xl max-w-lg rounded-r-xl">
+                                <div class="mt-2 md:mt-3 px-2 text-center text-secondary text-base font-bold md:text-lg">
+                                    @club.Name
+                                </div>
+                                <hr class="my-2 px-3 border-2 border-solid border-secondary m-auto">
+                                <div class="text-primary text-center font-medium text-sm md:text-md px-3 py-2">
+                                    @club.Description
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public ClubGroup ClubGroup { get; set; }
+
+    [Parameter]
+    public Dictionary<int, string> TypeLookup { get; set; }
+
+    private bool showList = true;
+
+    private string GetGroupName()
+    {
+        if (TypeLookup.ContainsKey(ClubGroup.Type))
+        {
+            return TypeLookup[ClubGroup.Type];
+        }
+        return "Unknown";
+    }
+}

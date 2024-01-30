@@ -1,4 +1,8 @@
 ﻿@page "/counter"
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
 
 <h1>Counter</h1>
 
@@ -6,8 +10,23 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<hr>
+
+@if (result == null)
+{
+    <p>Loading Authentication Data...</p>
+}
+else
+{
+    <p>@result.AccessToken</p>
+    <hr />
+    <hr />
+}
+
 @code {
     private int currentCount = 0;
+    private AuthResponse result = null;
+
 
     private void IncrementCount()
     {

@@ -1,0 +1,203 @@
+﻿@page "/post/{Id:int}"
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@inject IPostService _postService
+@inject NavigationManager NavManager
+
+@if (response == null)
+{
+    <h1>Loading Post Information...</h1>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-4 flex flex-col">
+            <a href="/forum/@response.Data.Post.ForumId"><h1 class="ml-1 text-primary font-bold font-serif hover:text-secondary text-base md:text-lg">>> @response.Data.ForumName</h1></a>
+            <div class="shadow-lg border-2 border-double border-primary rounded-3xl p-4 mt-2 shadow-secondary/20">
+                <div class="flex flex-col items-center md:flex-row md:flex-wrap">
+                    <a href="/profile/@response.Data.Post.User.Id">
+                        <div class="flex flex-col justify-center items-center w-48 py-3 px-2 border border-primary rounded-3xl text-center">
+                            <img class="w-16 h-16 rounded-3xl" src="@($"/images/profile/{response.Data.Post.User.Picture}")">
+                            <p class="mt-1 text-xs md:text-sm lg:text-base font-semibold hover:text-secondary">@response.Data.Post.User.Name</p>
+                            <p class="text-xs md:text-sm font-medium hover:text-secondary">@response.Data.Post.User.TPNumber</p>
+                        </div>
+                    </a>
+                    <div class="flex flex-col">
+                        <div class="mt-2 px-3 text-xs md:text-sm opacity-75">
+                            posted @response.Data.Post.GetPostDate()
+                        </div>
+                        <div class="px-3 text-sm md:text-base lg:text-lg font-bold">
+                            <span class="text-secondary mr-1">[@GetPostTypeName()]</span>@response.Data.Post.Title
+                        </div>
+                        <div class="mt-2 mb-4 px-3 text-xs md:text-sm lg:text-base max-w-5xl">
+                            @response.Data.Post.Content
+                        </div>
+                        <div class="px-3 flex flex-wrap">
+                            <div disabled="ImpressionButtonPressed" class="mr-3 hover:cursor-pointer @(CurrentImpression == 0 ? "text-primary hover:text-secondary" : "hover:text-primary")" 
+                            @onclick="@(async () => await HandleImpressionChange(0))">
+                                <i class="fa-solid fa-arrow-up fa-xs md:fa-sm"></i> @PostImpressions.FirstOrDefault(p => p.Value == 0).Impressions.Count() 
+                            </div>
+                            <div disabled="ImpressionButtonPressed" class="mr-3 hover:cursor-pointer @(CurrentImpression == 1 ? "text-primary hover:text-secondary" : "hover:text-primary")" 
+                            @onclick="@(async () => await HandleImpressionChange(1))">
+                                <i class="fa-solid fa-arrow-down fa-xs md:fa-sm"></i> @PostImpressions.FirstOrDefault(p => p.Value == 1).Impressions.Count() 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-col">
+                <h2 class="text-sm md:text-base lg:text-xl text-secondary font-serif w-full text-center md:text-start">Comments</h2>
+                <hr class="my-1 border border-solid border-primary w-full">
+                <div>
+                    <CascadingValue Value="Id">
+                        <PaginatedCommentsList Comments="response.Data.Comments" MaxPerPage="5"></PaginatedCommentsList>
+                    </CascadingValue>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private BasicHttpResponseWithData<APForums.Client.Data.DTO.PagesDTO.SinglePost> response = null;
+
+    private List<ImpressionGroup<PostImpression>> PostImpressions = new();
+
+    // -1 means they have no impression, 0 means upvoted, 1 means downvoted, and etc if there's more..
+    private int CurrentImpression = -1;
+
+    private bool ImpressionButtonPressed = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        response = await _postService.GetSinglePost(Id);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        PostImpressions = response.Data.Impressions.GroupBy(i => i.Value).Select(i => new ImpressionGroup<PostImpression>
+            {
+                Value = i.Key,
+                Impressions = i.ToList()
+            }).ToList();
+
+        UpdatePostImpressions();
+    }
+
+    private void UpdatePostImpressions()
+    {
+        // Check if the two primary types of impressions are here, if one of them is not found then we create an empty List.
+        // Otherwise, if we have a list already, then we check if user has any impression in the list to set the current impression.
+        var upvotes = PostImpressions.SingleOrDefault(g => g.Value == 0);
+        var downvotes = PostImpressions.SingleOrDefault(g => g.Value == 1);
+
+        if (upvotes == null)
+        {
+            PostImpressions.Add(new ImpressionGroup<PostImpression>
+            {
+                Value = 0,
+                Impressions = new List<PostImpression>()
+            });
+        }
+        else if (CurrentImpression == -1)
+        {
+            if (upvotes.Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id) != null) CurrentImpression = 0;
+        }
+
+        if (downvotes == null)
+        {
+            PostImpressions.Add(new ImpressionGroup<PostImpression>
+            {
+               Value = 1,
+               Impressions = new List<PostImpression>()
+            });
+        }
+        else if (CurrentImpression == -1) 
+        {
+            if (downvotes.Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id) != null) CurrentImpression = 1;
+
+        }
+        StateHasChanged();
+    }
+
+    private string GetPostTypeName()
+    {
+        if (Data.DTO.Post.TypeNames.ContainsKey(response.Data.Post.Type))
+        {
+            return Data.DTO.Post.TypeNames[response.Data.Post.Type];
+        }
+        return "Unknown";
+    }
+
+    private async Task HandleImpressionChange(int NewImpression)
+    {
+        ImpressionButtonPressed = true;
+        BasicHttpResponse response;
+
+        if (CurrentImpression == -1) // User did not make an impression on the post yet
+        {
+            // Create a new post
+            var impression = new PostImpression
+                {
+                    UserId = Settings.authInfo.Id,
+                    PostId = Id,
+                    Value = NewImpression
+                };
+
+            // Add the impression
+            response = await _postService.AddPostImpression(impression);
+            if (response.Status == HttpStatusCode.OK)
+            {
+                CurrentImpression = NewImpression;
+                PostImpressions.First(p => p.Value == NewImpression).Impressions.Add(impression);
+            }
+
+        }
+        else // User has an impression already
+        {
+            // Get the value of the current impression
+            var impression = PostImpressions.FirstOrDefault(pi => pi.Value == CurrentImpression)
+            .Impressions.FirstOrDefault(i => i.UserId == Settings.authInfo.Id);
+
+            // If the new impression is the same as the current one, we remove it entirely
+            if (CurrentImpression == NewImpression)
+            {
+                // Remove the impression
+                response = await _postService.RemovePostImpression(impression);
+                if (response.Status == HttpStatusCode.OK)
+                {
+                    CurrentImpression = -1; // Reset current impression to -1
+                    PostImpressions.First(p => p.Value == NewImpression).Impressions.Remove(impression);
+                }
+            }
+            else // If it's a different impression than the current one, then we modify the value in the server
+            {
+                impression.Value = NewImpression; // add the new value
+                response = await _postService.AddPostImpression(impression); // The add method updates the value in the database
+                if (response.Status == HttpStatusCode.OK)
+                {
+                    PostImpressions.First(p => p.Value == CurrentImpression).Impressions.Remove(impression);
+                    CurrentImpression = NewImpression; // Set current impression to new one
+                    PostImpressions.First(p => p.Value == CurrentImpression).Impressions.Add(impression);
+                }
+            }
+        }
+        if (response.Status != HttpStatusCode.OK) // Somethign went wrong.. :/
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+        else
+        {
+            UpdatePostImpressions(); // If nothing went wrong, then just update the UI!
+        }
+        ImpressionButtonPressed = false;
+    }
+
+}

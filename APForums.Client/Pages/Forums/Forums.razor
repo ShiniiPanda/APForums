@@ -1,0 +1,147 @@
+﻿@page "/forums"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject IForumService _forumService
+@inject IClubService _clubService
+@inject IPostService _postService
+@inject NavigationManager NavManager
+
+@if (paginationResponse == null)
+{
+    <h2>Loading Forums Information...</h2>
+}
+else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-6 flex flex-col justify-center items-center ">
+            <h1 class="mt-4 text-primary text-lg md:text-xl lg:text-3xl font-bold font-serif text-center">Explore Forums</h1>
+            <div class="flex flex-col justify-center items-center mt-2 md:mt-3 max-w-2xl w-full">
+                <hr class="border-2 border-solid border-secondary/80 w-full">
+                <div class="flex w-full items-center flex-wrap mt-3 md:mt-6">
+                    <label class="text-primary text-sm md:text-base lg:text-xl font-medium mr-2">Search</label>
+                    <input class="grow max-w-2xl shadow-md rounded-lg border border-secondary/50 mr-2 px-2 py-1" type="text" @bind-value="searchQuery" />
+                    <button class="rounded-lg text-secondarytext bg-secondary px-2 py-1 font-medium" @onclick=@(async () => await HandleSearch())>Go!</button>
+                </div>
+                <div class="mt-3 flex w-full items-center justify-evenly max-w-4xl px-2">
+                    <button disabled="@paginationUpdateHappening" class="grow @(forumsType == 0 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-l-lg" @onclick=@(async () => await ChangeForumsType(0))>Public</button>
+                    <button disabled="@paginationUpdateHappening" class="grow @(forumsType == 1 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext" @onclick=@(async () => await ChangeForumsType(1))>Intake</button>
+                    <button disabled="@paginationUpdateHappening" class="grow @(forumsType == 2 ? "bg-primary text-primarytext" : "bg-secondary text-secondarytext") px-2 py-1 font-medium hover:bg-primary hover:text-primarytext rounded-r-lg" @onclick=@(async () => await ChangeForumsType(2))>Clubs</button>
+                </div>
+            </div>
+            <div class="flex flex-col items-center mt-6 p-4 w-full max-w-3xl">
+                @if (paginationResponse == null)
+                {
+                    <h3>Loading Forum Posts...</h3>
+                } else
+                {
+                    <div class="mx-2 md:mx-3 flex justify-between w-full">
+                        @if (currentPage > 1)
+                        {
+                            <button class="ml-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+                        }
+                        <div class="ml-auto">
+                            @if (currentPage < paginationResponse.Data.TotalPages)
+                            {
+                                <button class="mr-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                            }
+                        </div>
+                    </div>
+                    <div class="p-2 flex flex-col">
+                        @foreach (var item in paginationResponse.Data.Items)
+                        {
+                            <ForumCard Forum="item.Forum" Post="item.Post"/>
+                        }
+                        @if (paginationResponse.Data.TotalItems == 0)
+                        {
+                            <p class="font-bold text-base md:text-lg lg:text-xl text-secondary text-center">There are no forums with the matching criteria!</p>
+                        }
+                    </div>
+                    <div class="mx-2 md:mx-3 mt-2 md:mt-3 flex justify-between w-full">
+                        @if (currentPage > 1)
+                        {
+                            <button class="ml-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Backwards">Previous</button>
+                        }
+                        <div class="ml-auto">
+                            @if (currentPage < paginationResponse.Data.TotalPages)
+                            {
+                                <button class="mr-3 px-2 md:px-3 py-1 bg-primary text-primarytext rounded-lg hover:bg-secondary hover:text-secondarytext" @onclick="Forwards">Next</button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        @*@for (int i = 1; i <= paginationResponse.Data.TotalPages; i++)
+    {
+    <a class="mx-1">@i</a>
+    }*@
+    </div>
+
+}
+
+@code {
+
+    private BasicHttpResponseWithData<PaginatedList<ForumWithRecentPost>> paginationResponse = null;
+
+    private readonly static int pageSize = 5;
+
+    private int currentPage = 1;
+
+    // Basically:
+    // 0 => All Public Forums, regardless of whether those forums belong to intakes or clubs.
+    // 1 => Only forums that fall under the user's intake code.
+    // 2 => Only club forums for the clubs which in the user is enrolled
+    // By default, we fetch 0. The user can control which one to fetch through the UI.
+    private int forumsType = 0;
+
+    private string searchQuery = "";
+
+    private bool paginationUpdateHappening = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task UpdatePaginatedRespose()
+    {
+        paginationUpdateHappening = true;
+        paginationResponse = await _forumService.GetUserForums(Settings.authInfo.Id, currentPage, sort: forumsType, size: pageSize, search: searchQuery);
+        if (paginationResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie", paginationResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        paginationUpdateHappening = false;
+    }
+
+    private async Task Backwards()
+    {
+        if (currentPage == 1) return;
+        currentPage--;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task Forwards()
+    {
+        if (currentPage >= paginationResponse.Data.TotalPages) return;
+        currentPage++;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task ChangeForumsType(int newType)
+    {
+        forumsType = newType;
+        await UpdatePaginatedRespose();
+    }
+
+    private async Task HandleSearch()
+    {
+        currentPage = 1;
+        await UpdatePaginatedRespose();
+    }
+}

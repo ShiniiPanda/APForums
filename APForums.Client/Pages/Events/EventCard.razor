@@ -1,0 +1,58 @@
+﻿@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO.PagesDTO
+
+<a href="/event/@Event.Event.Id">
+    <div class="flex-shrink-0 shadow-lg flex border-2 border-solid border-primary flex-col justify-center items-center p-4 mt-2 transform hover:scale-105 transition-transform duration-300 mr-2">
+        <div class="text-primary font-semibold text-center md:text-base lg:text-lg mt-1">
+            @Event.Event.Title
+        </div>
+        @if (ShowClub && Event.Event.ClubId != null)
+        {
+            <div class="text-secondary/80 font-medium text-center text-xs md:text-sm lg:text-md mb-1">
+                <a href="/club/@Event.Event.ClubId">@Event.Event.ClubName</a>
+            </div>
+        } else
+        {
+            <div class="text-secondary/80 font-medium text-center text-xs md:text-sm lg:text-md mb-1">
+                 APU
+            </div>
+        }
+        <hr class="border border-solid border-secondary px-2"/>
+        <div class="flex flex-col p-2">
+            <p>Start Date: <span class="text-secondary font-medium">@GetDateString(Event.Event.StartDate)</span></p>
+            <p>End Date: <span class="text-secondary font-medium">@GetDateString(Event.Event.EndDate)</span></p>
+        </div>
+        <div class="mt-1 bg-secondary text-secondarytext font-medium px-2 md:px-3 py-1 rounded-lg">
+            @if (Event.IsInterested)
+            {
+                <p>Interested <i class="fa-solid fa-check fa-xs md:fa-sm"></i></p>
+            } else
+            {
+                <p>View More</p>
+            }
+        </div>
+        @*<p class="text-center font-medium rounded-lg mt-1 w-full px-2 py-1 bg-purple-600 text-white text-sm">@Club.Abbreviation</p>*@
+    </div>
+</a>
+
+
+@code {
+    [Parameter]
+    public EventWithInterest Event { get; set; }
+
+    [Parameter]
+    public bool ShowClub { get; set;  } = false;
+
+    private string GetDateString(DateTime? date)
+    {
+        if (date is DateTime)
+        {
+            var datetime = (DateTime)date;
+            return datetime.ToString("dd/MM/yyyy");
+        }
+        return "Unknown";
+    }
+}

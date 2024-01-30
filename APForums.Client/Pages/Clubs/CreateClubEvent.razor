@@ -1,0 +1,174 @@
+﻿@page "/club/{Id:int}/addevent"
+@using System.Text
+@using System.Net
+@using System.Text.Json
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations;
+@inject IClubService _clubService
+@inject IEventService _eventService
+@inject NavigationManager NavManager
+
+@if(Club == null)
+{
+    <h1>Loading Club Information...</h1>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="flex text-base md:text-lg lg:text-2xl mt-4 font-serif ">
+            <a href="/club/@Club.Id"><h1 class="font-bold text-primary">(@Club.Name):&nbsp;</h1></a>
+            <span class="text-secondary font-semibold">Add New Event</span>
+        </div>
+        <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+        <div class="mt-4 p-4 flex flex-col w-full items-center md:items-start">
+            <EditForm class="w-full max-w-2xl space-y-4" Model="Model" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Title: </label>
+                    <InputText placeholder="Title of the event..." class="placeholder:text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Title"></InputText>
+                    <ValidationMessage For="@(() => Model.Title)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Subtitle: </label>
+                    <InputText placeholder="Subtitle of the event..." class="placeholder:text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Subtitle"></InputText>
+                    <ValidationMessage For="@(() => Model.Subtitle)" />
+                </div>
+                <div class="flex flex-wrap items-start">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Description: </label>
+                    <InputTextArea placeholder="Description about the event..." class="placeholder:text-center px-2 py-2 rounded-lg h-24 shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Description"></InputTextArea>
+                    <ValidationMessage For="@(() => Model.Description)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Private: </label>
+                    <InputCheckbox class="mt-1 rounded-lg" @bind-Value="Model.Private"></InputCheckbox>
+                    <ValidationMessage For="@(() => Model.Private)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Start Date: </label>
+                    <InputDate class="text-center font-semibold px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.StartDate"></InputDate>
+                    <ValidationMessage For="@(() => Model.StartDate)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">End Date:&nbsp;&nbsp;</label>
+                    <InputDate class="text-center font-semibold px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.EndDate"></InputDate>
+                    <ValidationMessage For="@(() => Model.EndDate)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Image URL: </label>
+                    <InputText placeholder="(Optiona) Image poster URL..." class="placeholder:text-center text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Image"></InputText>
+                    <ValidationMessage For="@(() => Model.Image)" />
+                </div>
+                @*<div>
+            <span>File: </span>
+            <input @onchange="@FileInputChange(InputFileChangeEventArgs e)" type="file" accept=".jpg,.jpeg,.png"/>
+            <p>@fileValidationMessage</p>
+            </div>*@
+                <button class="w-full px-2 md:px-3 py-1 font-semibold rounded-lg text-primarytext bg-primary text-sm md:text-base lg:text-lg" type="submit">Add Event</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private EventModel Model { get; set; } = new();
+
+    private Club Club = null;
+
+    //private string fileValidationMessage = "";
+
+    //private bool validFile = false;
+
+    //private IBrowserFile File = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Club = await _clubService.GetClub(Id);
+        if (Club == null)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", "Unable to load club information!", "Ok");
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+    //private void FileInputChange(InputFileChangeEventArgs e)
+    //{
+    //    validFile = true;
+    //    fileValidationMessage = "";
+
+    //    if (e.File == null)
+    //    {
+    //        validFile = false;
+    //    }
+    //    File = e.File;
+    //}
+
+    private async Task HandleValidSubmit()
+    {
+
+        //if (File != null)
+        //{
+        //    if (!validFile)
+        //    {
+        //        await App.Current.MainPage.DisplayAlert("Whoopsie!", "Invalid file format!", "Ok");
+        //        return;
+        //    }
+        //    using (var stream = await Task.Run(() => File.OpenReadStream()))
+        //    {
+        //        content.Add(new StreamContent(File.OpenReadStream(File.Size)), "file", File.Name);
+        //    }
+        //} else
+        //{
+        //    validFile = false;
+        //    return;
+        //}
+
+        var eventDTO = new Event();
+        eventDTO.Title = Model.Title;
+        eventDTO.SubTitle = Model.Subtitle;
+        eventDTO.Description = Model.Description;
+        eventDTO.StartDate = Model.StartDate;
+        eventDTO.EndDate = Model.EndDate;
+        eventDTO.Visibility = Model.Private ? 1 : 0;
+        eventDTO.ImagePath = Model.Image;
+        eventDTO.ClubId = Id;
+        eventDTO.ClubName = Club.Name;
+
+        var response = await _eventService.AddClubEvent(Id, eventDTO);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", "Added Event Successfully!", "Ok");
+            NavManager.NavigateTo($"/event/{response.Data}");
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+    }
+
+    private class EventModel
+    {
+        [Required]
+        [StringLength(255, ErrorMessage = "Title cannot exceed 255 characters!")]
+        public string Title { get; set; }
+
+        [StringLength(255, ErrorMessage = "Subtitle cannot exceed 255 characters!")]
+        public string Subtitle { get; set; }
+
+        public string Description { get; set; }
+
+        public string Image { get; set; }
+
+        public bool Private = false;
+
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime EndDate { get; set; } = DateTime.UtcNow.AddDays(3);
+    }
+
+}

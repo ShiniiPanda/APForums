@@ -1,0 +1,169 @@
+﻿@page "/settings/profile/socials"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.Structures
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@inject ITagService _tagService
+@inject ISocialService _socialService
+@inject NavigationManager NavManager
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-md py-4 px-8">
+    <SettingsNavBar Category="Profile"></SettingsNavBar>
+    <div class="p-2 my-6 flex flex-col items-center md:items-start">
+        @if (LoadingSocials)
+        {
+            <h1>Loading User Socials...</h1>
+        }
+         else
+        {
+            <h1 class="md:text-2xl text-primary font-serif">Manage Social Links</h1>
+            <hr class="w-full border-2 border-secondary/80 border-solid" />
+            <div class="w-full max-w-3xl mt-4 p-2">
+            @foreach(var social in Socials)
+            {
+                <div class="px-2 md:px-3 py-2 bg-primary rounded-lg mt-2 flex flex-wrap items-center" @key="social.Id">
+                    <div class="mt-1 md:mt-0 mr-2 flex grow max-w-xl">
+                        <label class="text-white mr-2 font-semibold">Value: </label>
+                        <InputText class="px-1 md:px-2 grow" @bind-Value="social.Value"></InputText>
+                    </div>
+                    <div class="mt-1 md:mt-0 mr-3 flex grow max-w-xl">
+                        <label class="text-white mr-2 font-semibold">Type:&nbsp;</label>
+                        <InputSelect class="px-1 md:px-2 grow" @bind-Value="social.Type">
+                            @foreach (var type in SocialLink.SocialLinkTypes)
+                            {
+                                <option value="@type.Key">@type.Value</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="mt-1 md:mt-0 mr-2">
+                        <button class="bg-secondary rounded-full px-2 md:px-3 py-1 text-secondarytext" @onclick="@(() => HandleSocialEdit(social))">Edit</button>
+                        <button class="bg-red-400/70 rounded-full px-2 md:px-3 py-1 text-white" @onclick="@(() => HandleSocialDelete(social.Id))">Remove</button>
+                    </div>
+                </div>
+            }
+            @if (Socials.Count < 10)
+            {
+                <EditForm Model="Model" OnValidSubmit="HandleSocialSubmit">
+                    <DataAnnotationsValidator/>
+                        <div class="px-2 md:px-3 py-2 bg-secondary rounded-lg mt-2 flex flex-wrap items-center">
+                            <div class="mt-1 md:mt-0 mr-2 flex grow max-w-xl">
+                            <label class="text-white mr-2 font-semibold">Value: </label>
+                            <InputText class="px-1 md:px-2 grow" @bind-Value="Model.Value"></InputText>
+                            </div>
+                            <div class="mt-1 md:mt-0 mr-3 flex grow max-w-xl">
+                                <label class="text-white mr-2 font-semibold">Type:&nbsp;</label>
+                                <InputSelect class="px-1 md:px-2 grow" @bind-Value="Model.Type">
+                                    @foreach (var type in SocialLink.SocialLinkTypes)
+                                    {
+                                        <option value="@type.Key">@type.Value</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="mt-1 md:mt-0 flex grow mr-2">
+                                <button type="submit" class="grow bg-primary rounded-full px-2 md:px-3 py-1 text-primarytext">Add</button>
+                            </div>
+                        </div>
+                    <ValidationSummary/>
+                </EditForm>
+            } else
+            {
+                    <h3 class="mt-2 font-bold text-primary">User can only have up to 10 social links!</h3>
+            }
+            </div>
+            @if(Socials.Count() == 0)
+            {
+                <h2>You don't have any social links, yet!</h2>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<SocialLink> Socials = new();
+
+    private bool LoadingSocials = true;
+
+    private SocialLinkModel Model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await _socialService.GetUserSocials(Settings.authInfo.Id);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/settings/profile");
+            return;
+        }
+        Socials = response.Data.OrderBy(s => s.Type).ToList();
+        LoadingSocials = false;
+    }
+
+    private string GetSocialType(int type)
+    {
+        if (SocialLink.SocialLinkTypes.ContainsKey(type))
+        {
+            return SocialLink.SocialLinkTypes[type];
+        }
+        return "Unknown";
+    }
+
+    private async Task HandleSocialEdit(SocialLink social)
+    {
+        var response = await _socialService.UpdateSocialLink(social);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", "You have successfully updated a Social Link!", "Ok");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/settings/profile/socials");
+        }
+    }
+
+    private async Task HandleSocialDelete(int id)
+    {
+        var response = await _socialService.DeleteSocialLink(id);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            var linkToRemove = Socials.Where(s => s.Id == id).FirstOrDefault();
+            if (linkToRemove != null) Socials.Remove(linkToRemove);
+            await App.Current.MainPage.DisplayAlert("Success!", "You have successfully removed a Social Link!", "Ok");
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+    }
+
+    private async Task HandleSocialSubmit()
+    {
+        if (Socials.Count >= 10) return;
+        var newSocial = new SocialLink();
+        newSocial.Type = Model.Type;
+        newSocial.Value = Model.Value;
+        newSocial.UserId = Settings.authInfo.Id;
+        var response = await _socialService.AddSocialLink(newSocial);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            Socials.Add(response.Data);
+            await App.Current.MainPage.DisplayAlert("Success!", "You have successfully added a Social Link!", "Ok");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+    }
+
+    private class SocialLinkModel
+    {
+        [Required]
+        public int Type { get; set; } = 0;
+
+        [Required]
+        [StringLength(128, ErrorMessage = "Cannot exceed 128 characters!")]
+        public string Value { get; set; }
+    }
+}

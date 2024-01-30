@@ -1,0 +1,18 @@
+﻿@using APForums.Client.Data.DTO
+
+<a href="/profile/@User.Id">
+    <div class="flex flex-col items-center mr-3 mt-2 rounded-xl border-4 border-solid border-primary py-4 px-6 justify-center transform hover:scale-105 transition-transform duration-300">
+        <img class="w-16 h-16 md:w-24 md:h-24 rounded-3xl" src="@($"/images/profile/{User.Picture}")" alt="Profile Picture" />
+        <div class="mt-2 md:mt-2 flex-col items-center text-center flex-wrap w-full">
+            <p class="md:mt-2 text-primarytext rounded-2xl bg-primary px-3 md:px-4 py-1 font-medium text-sm md:text-base lg:text-lg">@User.Name</p>
+            <p class="text-secondarytext bg-secondary rounded-2xl px-3 md:px-4 py-1 font-medium text-xs md:text-sm lg:text-base mt-1">@User.TPNumber</p>
+            <p class="text-secondarytext bg-secondary rounded-2xl px-3 md:px-4 py-1 font-medium text-xs md:text-sm lg:text-base mt-1">@User.Intake</p>
+        </div>
+
+    </div>
+</a>
+
+@code {
+    [Parameter]
+    public BasicUser User { get; set; }
+}

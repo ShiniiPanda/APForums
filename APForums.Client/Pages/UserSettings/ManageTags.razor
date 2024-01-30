@@ -1,0 +1,129 @@
+﻿@page "/settings/profile/tags"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.Structures
+@inject ITagService _tagService
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-md py-4 px-8">
+    <SettingsNavBar Category="Profile"></SettingsNavBar>
+    <div class="p-2 my-6 flex flex-col items-center md:items-start">
+        @if (Loading)
+        {
+            <h1>Loading Profile Tags...</h1>
+        }
+        else
+        {
+            <h1 class="md:text-2xl text-primary font-serif">Manage Profile Tags</h1>
+            <hr class="w-full border-2 border-secondary border-solid" />
+            <div class="mt-6 p-2">
+                <h2 class="text-primary text-xl">Current Tags</h2>
+                <div class="flex flex-wrap mb">
+                    @foreach (var tag in UserTags)
+                    {
+                        <div disabled="@ButtonPressed" @onclick="() => HandleRemoveTag(tag.Id)" class="flex items-center rounded-lg flex px-2 md:px-3 py-1 bg-secondary text-secondarytext transform hover:scale-105 transition-transform duration-300 mr-1 md:mr-2 mt-2">
+                            <span class="text-xs md:text-base font-medium mr-1">@tag.Name </span>
+                            <i class="text-xs md:text-sm lg:text-base fa-solid fa-minus"></i>
+                        </div>
+                    }
+                </div>
+                @if (UserTags.Count() == 0)
+                {
+                    <p class="text-sm md:text-md text-secondary font-semibold">You don't have any tags, yet!'</p>
+                }
+                <hr class="w-full border-2 border-secondary border-solid my-4" />
+                <h2 class="text-primary text-xl">Available Tags</h2>
+                <div class="flex flex-wrap">
+                    @foreach (var tag in AllTags)
+                    {
+                        <div disabled="@ButtonPressed" @onclick="() => HandleAddTag(tag.Id)" class="flex items-center rounded-lg flex px-2 md:px-3 py-1 bg-secondary text-secondarytext transform hover:scale-105 transition-transform duration-300 mr-1 md:mr-2 mt-2">
+                            <span class="text-xs md:text-base font-medium mr-1">@tag.Name </span>
+                            <i class="text-xs md:text-sm lg:text-base fa-solid fa-plus"></i>
+                        </div>
+                    }
+                </div>  
+            </div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private List<ProfileTag> AllTags = new List<ProfileTag>();
+    private List<ProfileTag> UserTags = new List<ProfileTag>();
+    private bool Loading = true;
+    private bool ButtonPressed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userTagsResponse = await _tagService.GetProfileTags(Settings.authInfo.Id);
+        UserTags = userTagsResponse.Data.OrderBy(t => t.Name).ToList();
+        var allTagsResponse = await _tagService.GetAllProfileTags();
+        AllTags = allTagsResponse.Data.Except(userTagsResponse.Data, new ProfileTagComaparer())
+        .OrderBy(t => t.Name)
+        .ToList();
+        Loading = false;
+    }
+
+    private async Task HandleRemoveTag(int? id)
+    {
+        if (id == null) return;
+        ButtonPressed = true;
+        var response = await _tagService.RemoveProfileTag((int)id);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            var tag = UserTags.SingleOrDefault(t => t.Id == id);
+            if (tag != null)
+            {
+                AllTags.Add(tag);
+                AllTags = AllTags.OrderBy(t => t.Name).ToList();
+                UserTags.Remove(tag);
+            }
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+        ButtonPressed = false;
+    }
+
+    private async Task HandleAddTag(int? id)
+    {
+        if (id == null) return;
+        ButtonPressed = true;
+        var response = await _tagService.AddProfileTag((int)id);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            var tag = AllTags.SingleOrDefault(t => t.Id == id);
+            if (tag != null)
+            {
+                UserTags.Add(tag);
+                UserTags = UserTags.OrderBy(t => t.Name).ToList();
+                AllTags.Remove(tag);
+            }
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+        ButtonPressed = false;
+    }
+
+    private class ProfileTagComaparer : IEqualityComparer<ProfileTag>
+    {
+        public bool Equals(ProfileTag x, ProfileTag y)
+        {
+            if (x.Id == y.Id) return true;
+            return false;
+        }
+
+        public int GetHashCode(ProfileTag obj)
+        {
+            return obj.Id.GetHashCode();
+        }
+    }
+}
+

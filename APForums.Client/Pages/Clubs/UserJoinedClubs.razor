@@ -1,0 +1,82 @@
+﻿@page "/userclubs"
+@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject NavigationManager NavManager
+@inject IClubService _clubService
+
+
+<div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+    <h1 class="mt-4 text-base md:text-lg lg:text-2xl font-serif font-bold text-primary text-center md:text-start">My Clubs</h1>
+    <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+    <div class="mt-4 p-4 flex flex-col items-center md:items-start">
+        <div class="flex w-full items-center flex-wrap">
+            <label class="text-primary text-sm md:text-base lg:text-xl font-medium mr-2">Search</label>
+            <input class="grow max-w-2xl shadow-md rounded-lg border border-secondary/50 mr-2 px-2 py-1" type="text" @bind-value="searchQuery" />
+            <button class="rounded-lg text-secondarytext bg-secondary px-2 py-1 font-medium text-center w-full max-w-4xl md:w-fit mt-2 md:mt-0" @onclick=@(() => SearchVisibleClubs(searchQuery))>Go!</button>
+        </div>
+        @if (VisibleClubs == null)
+        {
+            <h2>Loading Clubs Information...</h2>
+        }
+        else
+        {
+            <div class="mt-6 w-full flex flex-col p-2">
+                @foreach (var type in VisibleClubs)
+                {
+                    <ClubGroupList TypeLookup="Club.ClubRoles" ClubGroup="type" @key="type"></ClubGroupList>
+                }
+                @if (VisibleClubs.Count() == 0)
+                {
+                    <h2>There are no clubs that fit the given criteria..</h2>
+                }
+            </div>
+        }
+        <a href="/clubs" class="w-full my-2 rounded-lg text-primarytext bg-primary px-3 py-1 font-medium text-center">Explore More Clubs</a>
+    </div>
+</div>
+
+@code {
+
+
+    private BasicHttpResponseWithData<IEnumerable<ClubWithRole>> response = null;
+
+    private List<ClubGroup> VisibleClubs = null;
+
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        response = await _clubService.GetUserClubs(Settings.authInfo.Id);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        VisibleClubs = response.Data.GroupBy(c => c.Role)
+        .OrderByDescending(c => c.Key)
+        .Select(i => new ClubGroup
+            {
+                Type = i.Key,
+                Clubs = i.Select(i => i.Club).ToList()
+            }).ToList();
+    }
+
+    private void SearchVisibleClubs(string query = "")
+    {
+        VisibleClubs = response.Data.Where(c => c.Club.Name.Contains(query))
+        .GroupBy(c => c.Role)
+        .OrderByDescending(c => c.Key)
+        .Select(i => new ClubGroup
+            {
+                Type = i.Key,
+                Clubs = i.Select(i => i.Club).ToList()
+            })
+            .ToList();
+        StateHasChanged();
+    }
+}

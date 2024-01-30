@@ -1,0 +1,116 @@
+﻿@page "/club/{Id:int}/addforum"
+@using System.Text
+@using System.Net
+@using System.Text.Json
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations;
+@inject IClubService _clubService
+@inject IForumService _forumService
+@inject NavigationManager NavManager
+
+
+@if(Club == null)
+{
+    <h1>Loading Club Information...</h1>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="flex text-base md:text-lg lg:text-2xl mt-4 font-serif ">
+            <a href="/club/@Club.Id"><h1 class="font-bold text-primary">(@Club.Name):&nbsp;</h1></a>
+            <span class="text-secondary font-semibold">Add New Forum</span>
+        </div>
+        <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+        <div class="mt-4 p-4 flex flex-col w-full items-center md:items-start">
+            <EditForm class="w-full max-w-2xl space-y-4" Model="Model" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Title: </label>
+                    <InputText placeholder="New forum title..." class="placeholder:text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Name"></InputText>
+                    <ValidationMessage For="@(() => Model.Name)" />
+                </div>
+                <div class="flex flex-wrap items-start">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Description: </label>
+                    <InputTextArea placeholder="Description about the new forum..." class="placeholder:text-center px-2 py-2 rounded-lg h-24 shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Description"></InputTextArea>
+                    <ValidationMessage For="@(() => Model.Description)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Intake: </label>
+                    <InputText placeholder="(Optional) Intake code..." class="placeholder:text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary grow" @bind-Value="Model.Intake"></InputText>
+                    <ValidationMessage For="@(() => Model.Intake)" />
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Private: </label>
+                    <InputCheckbox class="mt-1 rounded-lg" @bind-Value="Model.Private"></InputCheckbox>
+                    <ValidationMessage For="@(() => Model.Private)" />
+                </div>
+                <button class="w-full px-2 md:px-3 py-1 font-semibold rounded-lg text-primarytext bg-primary text-sm md:text-base lg:text-lg" type="submit">Add Forum</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private ForumModel Model { get; set; } = new();
+
+    private Club Club = null;
+
+    //private string fileValidationMessage = "";
+
+    //private bool validFile = false;
+
+    //private IBrowserFile File = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Club = await _clubService.GetClub(Id);
+        if (Club == null)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", "Unable to load club information!", "Ok");
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var forumDTO = new Forum();
+        forumDTO.Name = Model.Name;
+        forumDTO.Description = Model.Description;
+        forumDTO.Intake = Model.Intake;
+        forumDTO.Visibility = Model.Private ? 1 : 0;
+        forumDTO.ClubId = Id;
+
+        var response = await _forumService.AddClubForum(Id, forumDTO);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", "Added Forum Successfully!", "Ok");
+            NavManager.NavigateTo($"/forum/{response.Data}");
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+        }
+    }
+
+    private class ForumModel
+    {
+        [Required]
+        [StringLength(100, ErrorMessage = "Forum Name cannot exceed 100 characters!")]
+        public string Name { get; set; }
+
+        [StringLength(30, ErrorMessage = "Intake Code cannot exceed 30 characters!")]
+        public string Intake { get; set; }
+
+        public string Description { get; set; }
+
+        public bool Private = false;
+    }
+
+}

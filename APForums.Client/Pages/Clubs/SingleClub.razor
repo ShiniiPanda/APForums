@@ -1,0 +1,140 @@
+﻿@page "/club/{Id:int}"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Pages.Events
+@using APForums.Client.Pages.Forums
+@inject IClubService _clubService
+@inject NavigationManager NavManager
+
+@if (clubResponse == null)
+{
+    <h2>Loading Club Information...</h2>
+} else
+{    
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-6 flex flex-col justify-center items-center ">
+            <img class="w-24 h-24 md:w-48 md:h-48 lg:w-64 lg:h-64 border rounded-3xl transform hover:scale-105 transition-transform duration-300" src="@GetClubLogoURL()" alt="Profile Image" />
+            <h1 class="mt-4 text-primary text-3xl font-serif text-center">@clubResponse.Data.Club.Name</h1>
+            <div class="flex flex-col justifty-center items-center mt-1 md:mt-2">
+                @if (clubResponse.Data.Role == 0)
+                {
+                    <button @onclick="HandleJoinSubmit" class="transform hover:scale-105 transition-transform duration-300 mt-1 text-md bg-secondary text-secondarytext rounded-lg font-medium px-2 md:px-4 py-1">Join</button>
+                } else
+                {
+                    <button @onclick="HandleLeaveSubmit" class="transform hover:scale-105 transition-transform duration-300 mt-1 text-md bg-secondary text-secondarytext rounded-lg font-medium px-2 md:px-4 py-1">
+                        Joined
+                        <i class="fa-solid fa-check fa-xs md:fa-sm"></i>
+                        </button>
+                }
+                <a class="transform hover:scale-105 transition-transform duration-300 text-md font-medium bg-primary text-primarytext px-2 md:px-4 py-1 mt-1 rounded-lg" href="/club/@Id/members"><h1>Members (@clubResponse.Data.MemberCount)</h1></a>
+                @if (clubResponse.Data.Role >= 2)
+                {
+                    <div class="mt-1 flex flex-wrap items-center text-center">
+                        <a class="transform hover:scale-105 transition-transform duration-300 text-md font-medium bg-secondary text-secondarytext px-2 md:px-4 py-1 rounded-lg mr-1" href="/club/@Id/addforum"><h1>Add Forum</h1></a>
+                        <a class="transform hover:scale-105 transition-transform duration-300 text-md font-medium bg-secondary text-secondarytext px-2 md:px-4 py-1 rounded-lg" href="/club/@Id/addevent"><h1>Add Event</h1></a>
+                    </div>
+                }
+             </div>
+        </div>
+        <div class="p-4 mt-6 flex flex-col items-center md:items-start">
+            <h1 class="text-primary font-serif text-2xl">Description</h1>
+            <hr class="border-2 border-solid border-secondary/80 w-full">
+            <div class="px-2 mt-4 mb-8">
+                <div>
+                    @clubResponse.Data.Club.Description
+                </div>
+            </div>
+            <h1 class="text-primary font-serif text-2xl">Upcoming Events</h1>
+            <hr class="border-2 border-solid border-secondary/80 w-full">
+            <div class="px-2 mt-4 mb-4">
+                <div class="mb-2 p-2 flex flex-col md:flex-row md:flex-wrap">
+                    @foreach(var Event in clubResponse.Data.Events)
+                    {
+                        <EventCard Event="Event"/>
+                    }
+                    @if (clubResponse.Data.Events.Count() == 0) {
+                        <p class="text-sm md:text-base lg:text-lg text-primary font-semibold">There are no upcoming events :/!</p>
+                    }
+                </div>
+            </div>
+            <h1 class="mt-6 text-primary font-serif text-2xl">Forums</h1>
+            <hr class="border-2 border-solid border-secondary/80 w-full">
+            <div class="px-2 mt-4 mb-8">
+                <div class="mt-2 mb-2 flex flex-wrap">
+                    @foreach (var Forum in clubResponse.Data.Forums)
+                    {
+                        <BasicForumCard Forum="Forum" />
+                    }
+                    @if (clubResponse.Data.Forums.Count() == 0)
+                    {
+                        <p class="text-sm md:text-base lg:text-lg text-primary font-semibold">This club doesn't have any forums :/!</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private BasicHttpResponseWithData<APForums.Client.Data.DTO.PagesDTO.SingleClub> clubResponse = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await FetchClubResponse();
+    }
+
+    private async Task FetchClubResponse()
+    {
+        clubResponse = await _clubService.GetSingleClubResponse(Id);
+        if (clubResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", clubResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+    }
+
+    private async Task HandleJoinSubmit()
+    {
+        var clubJoinResponse = await _clubService.JoinClub(Id);
+        if (clubJoinResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", clubJoinResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", $"You have successfully joined {clubResponse.Data.Club.Abbreviation}!", "Ok");
+            await FetchClubResponse();
+        }
+    }
+
+    private async Task HandleLeaveSubmit()
+    {
+        var confirmation = await App.Current.MainPage.DisplayAlert("Confirmation", $"Are you sure you want to leave {clubResponse.Data.Club.Abbreviation}?", "Yes", "No");
+        if (!confirmation) return;
+        var clubJoinResponse = await _clubService.LeaveClub(Id);
+        if (clubJoinResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", clubJoinResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", $"You have successfully left {clubResponse.Data.Club.Abbreviation}!", "Ok");
+            await FetchClubResponse();
+        }
+    }
+
+    private string GetClubLogoURL()
+    {
+        return $"/images/club/{clubResponse.Data.Club.Logo}";
+    }
+}

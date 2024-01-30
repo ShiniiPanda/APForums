@@ -1,0 +1,68 @@
+﻿@page "/tag/{Id:int}"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Pages.Profile
+@using APForums.Client.Data.Interfaces
+@inject ITagService _tagService;
+@inject NavigationManager NavManager
+
+@if (Loading)
+{
+    <h1>Loading Tag Information ...</h1>
+
+} else
+{
+
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="mt-4 p-4 flex flex-col items-center md:items-start">
+            <div class="flex items-center font-serif">
+                <p class="text-primary text-base md:text-xl lg:text-2xl font-medium">Users with the <span class="text-secondary">@response.Data.Tag.Name</span> tag</p>
+            </div>
+            <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+            <div class="mt-4 p-2 flex flex-col md:flex-row items-center md:flex-wrap">
+                @foreach(var user in response.Data.Users)
+                {
+                    <div class="flex flex-col items-center justify-center">
+                        <BasicUserCard User="user.User" />
+                        @if(user.Connection == 1)
+                        {
+                            <p class="mt-1 text-primary text-sm md:text-base">You follow them!</p>
+                        }
+                    </div>
+                }
+                @if (response.Data.Users.Count() == 0)
+                {
+                    <p class="text-primary text-sm md:text-base lg:text-lg font-medium">Nobody has added this tag yet, be the first!</p>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private BasicHttpResponseWithData<Data.DTO.PagesDTO.SocialProfileTag> response = null;
+
+    private bool Loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        response = await _tagService.GetSocialProfileTag(Id);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok!");
+            NavManager.NavigateTo("/home");
+        }
+        if (response.Data.Users.Count() > 0)
+        {
+            response.Data.Users = response.Data.Users.OrderByDescending(u => u.Connection).ToList();
+        }
+        Loading = false;
+    }
+}

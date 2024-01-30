@@ -1,0 +1,51 @@
+﻿@using APForums.Client.Data.DTO
+
+<a href="/post/@Post.Id">
+    <div class="shadow-lg border-1 border-solid border-primary rounded-3xl px-4 py-2 mt-2 shadow-secondary/10 transform hover:scale-[1.02] transition-transform duration-300">
+        <div class="flex my-2 md:my-3 ml-1 md:ml-2 items-start md:items-center">
+            <img class="w-8 h-8 rounded-full mr-2" src="@($"/images/profile/{Post.User.Picture}")">
+            <p>
+                <span class="text-xs md:text-sm lg:text-base font-semibold hover:text-secondary">@Post.User.Name</span>
+                <span class="text-xs md:text-sm font-semibold opacity-75"> - @Post.GetPostDate()</span>
+                @if (ShowForum)
+                {
+                <span class="ml-1 text-xs md:text-sm font-semibold opacity-75"> in <a class="hover:text-secondary" href="/forum/@Post.ForumId">@Post.ForumName</a></span>
+                }
+            </p>
+        </div>
+        <div class="mt-2 px-3 text-sm md:text-base lg:text-lg font-bold">
+            <span class="text-secondary mr-1">[@GetPostTypeName()]</span>
+            @Post.Title
+        </div>
+        <div class="mt-2 mb-3 px-3 text-xs md:text-sm lg:text-base">
+            @if (ContentPreview)
+            {
+                @Post.GetContentPreview()
+                
+            } else
+            {
+                @Post.Content
+            }
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter]
+    public Post Post{ get; set; }
+
+    [Parameter]
+    public bool ShowForum { get; set; } = false;
+
+    [Parameter]
+    public bool ContentPreview { get; set; } = false;
+
+    private string GetPostTypeName()
+    {
+        if (Data.DTO.Post.TypeNames.ContainsKey(Post.Type))
+        {
+            return Data.DTO.Post.TypeNames[Post.Type];
+        }
+        return "Unknown";
+    }
+}

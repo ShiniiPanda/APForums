@@ -1,0 +1,224 @@
+﻿@page "/profile/{Id:int}"
+@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.IdentityModel.Tokens.Jwt
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO.PagesDTO
+@using APForums.Client.Pages.Clubs
+@inject NavigationManager NavManager
+@inject IUserService _userService
+@inject IJSRuntime _jsRuntime
+
+
+@if(response == null)
+{
+    <div>
+       Loading User Information...
+    </div>
+}
+else if (response.Status != HttpStatusCode.OK) {
+    <p> Failed! </p>
+}
+else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-4 px-8">
+        <div class="mt-6 w-full flex flex-col justify-center items-center ">
+            <img class="w-36 h-36 border rounded-3xl shadow-md transform hover:scale-105 transition-transform duration-300" src="@GetProfileImageUrl()" alt="Profile Image" />
+            <h1 class="mt-4 text-primary text-3xl font-serif">@response.Data.User.Name</h1>
+            <div class="flex justifty-center items-center">
+                <div class="mt-1 text-md bg-primary text-primarytext rounded-lg font-medium px-4 py-1">@response.Data.User.Email</div>
+            </div>
+            <div class="mt-1 text-md bg-primary text-white rounded-lg px-4 font-medium py-1">@response.Data.User.Intake</div>
+            @if (!OwnProfile)
+            {
+                @if (!response.Data.IsFollowed)
+                {
+                    <button class="mt-1 text-md border border-solid shadow-sm rounded-lg bg-secondary text-secondarytext px-4 py-1" 
+                    disabled="@FollowButtonPressed" @onclick="@HandleFollow">
+                        Follow
+                    </button>
+                }
+                else
+                {
+                    <button class="mt-1 text-md bg-secondary border border-solid shadow-sm rounded-lg text-secondarytext px-4 py-1"
+                    disabled="@FollowButtonPressed" @onclick="@HandleUnfollow">
+                        Followed <i class="fa-solid fa-check fa-sm md:fa-lg"></i>
+                    </button>
+                }
+                @if (response.Data.IsFollower)
+                {
+                    <span class="text-sm font-semibold mt-2 text-secondary">@response.Data.User.Name follows you!</span>
+                }
+            }
+            <div class="mt-1 pt-1 flex">
+                <a class="mr-5 text-md font-medium text-primary/90" href="/profile/connections/@Id/0"><h1>Followers(@(FollowersCount))</h1></a>
+                <a class="text-md font-medium text-primary/90" href="/profile/connections/@Id/1"><h1>Following(@(FollowingCount))</h1></a>
+            </div>
+        </div>
+        <div class="p-4 mt-8">
+            <h1 class="text-primary font-serif text-2xl">Profile Tags</h1>
+            <hr class="border-2 border-solid border-secondary/80">
+            <div class="px-2 mt-4 mb-8">
+                <div class="mt-4 mb-2 flex flex-wrap">
+                    @if (response.Data.ProfileTags.Count() > 0)
+                    {
+                        @foreach (var tag in response.Data.ProfileTags)
+                        {
+                            <a href="/tag/@tag.Id">
+                                <div class="mr-2 mt-2 rounded-lg text-sm md:text-base lg:text-lg shadow-sm bg-secondary font-medium text-secondarytext px-2 md:px-3 py-1">
+                                    @tag.Name
+                                </div>
+                            </a>
+
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-sm md:text-md text-secondary font-semibold">User doesn't have any profile tags :/</p>
+                    }
+                </div>
+            </div>
+            <h1 class="mt-8 text-primary font-serif text-2xl">Clubs</h1>
+            <hr class="border-2 border-solid border-secondary/80">
+            <div class="px-2 mt-4 mb-8">
+                <div class="mt-2 mb-2 flex flex-wrap">
+                    @if (response.Data.Clubs.Count() > 0)
+                    {
+                        @foreach (var club in response.Data.Clubs)
+                        {
+                            <BasicClubCard Club="club" />
+
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-sm md:text-md text-secondary font-semibold">User is not affiliated with any clubs :/</p>
+                    }
+                </div>
+            </div>
+            <h1 class="mt-8 text-primary font-serif text-2xl">Socials</h1>
+            <hr class="border-2 border-solid border-secondary/80">
+            <div class="px-2 mt-4 mb-8">
+                <div class="mt-4 mb-2 flex flex-wrap">
+                    @if (response.Data.Socials.Count() > 0)
+                    {
+                        @foreach (var social in response.Data.Socials)
+                        {
+                            <div class="mr-2 mt-2 bg-secondary px-3 md:px-4 py-1 text-secondarytext rounded-lg text-sm md:text-base lg:text-lg">
+                                <i class="@GetSocialIcon(social.Type) text-sm md:text-base lg:text-lg"></i>
+                                <span class="">@social.Value</span>
+                            </div>
+
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-sm md:text-md text-secondary font-semibold">User doesn't have any social links on display :/</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public BasicHttpResponseWithData<Data.DTO.PagesDTO.Profile> response = null;
+
+    public bool OwnProfile = false;
+
+    public int FollowersCount = 0;
+
+    public int FollowingCount = 0;
+
+    public bool FollowButtonPressed = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        response = await _userService.GetUserProfile(Id);
+        if (response.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        }
+        FollowersCount = response.Data.NumberOfFollowers;
+        FollowingCount = response.Data.NumberOfFollowing;
+        if (Settings.authInfo.Id == Id) OwnProfile = true;
+    }
+
+    private async Task HandleFollow()
+    {
+        if (OwnProfile) return;
+        FollowButtonPressed = true;
+        var followResponse = await _userService.FollowUser(Id);
+        if (followResponse.Status == HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", $"You have successfully started following {response.Data.User.Name}!", "Ok");
+            response.Data.IsFollowed = true;
+            FollowersCount++;
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", followResponse.Error, "Ok");
+        }
+        FollowButtonPressed = false;
+    }
+
+    private async Task HandleUnfollow()
+    {
+        if (OwnProfile) return;
+        FollowButtonPressed = true;
+        var followResponse = await _userService.UnfollowUser(Id);
+        if (followResponse.Status == HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Success!", $"You have successfully unfollowed {response.Data.User.Name}!", "Ok");
+            response.Data.IsFollowed = false;
+            FollowersCount--;
+        }
+        else if (followResponse.Status == HttpStatusCode.InternalServerError)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", $"You are not currently following this user!", "Ok");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", $"Unable to process your request!", "Ok");
+        }
+        FollowButtonPressed = false;
+    }
+
+    private string GetProfileImageUrl()
+    {
+        return $"/images/profile/{response.Data.User.Picture}";
+    }
+
+    private string GetSocialIcon(int type)
+    {
+        switch (type)
+        {
+            case 0:
+                return "fa-solid fa-envelope";
+            case 1:
+                return "fa-brands fa-discord";
+            case 2:
+                return "fa-brands fa-tiktok";
+            case 3:
+                return "fa-brands fa-instagram";
+            case 4:
+                return "fa-brands fa-whatsapp";
+            case 5:
+                return "fa-brands fa-facebook";
+            case 6:
+                return "fa-brands fa-reddit";
+            default:
+                return "fa-solid fa-circle-question";
+        }
+    }
+}

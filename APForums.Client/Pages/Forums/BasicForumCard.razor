@@ -1,0 +1,25 @@
+﻿@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.DTO.PagesDTO
+
+
+<a href="/forum/@Forum.Id">
+    <div class="flex-shrink-0 shadow-lg flex border-2 border-solid border-primary flex-col justify-center items-center rounded-3xl py-2 px-3 mt-2 transform hover:scale-105 transition-transform duration-300 mr-2">
+        <div class="text-secondary font-semibold text-center md:text-base lg:text-lg">
+            @Forum.Name <span class="text-primary">(@GetForumVisibility())</span>
+        </div>
+    </div>
+</a>
+
+@code {
+        [Parameter]
+        public Forum Forum { get; set; }
+
+        private string GetForumVisibility()
+        {
+            if (Forum.Visibility == 0) return "Public";
+            return "Private";
+        }
+}

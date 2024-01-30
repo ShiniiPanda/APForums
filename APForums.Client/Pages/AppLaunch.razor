@@ -1,0 +1,81 @@
+﻿@page "/"
+@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.IdentityModel.Tokens.Jwt
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject NavigationManager NavManager
+@inject ILoginService _loginService
+@inject IUserService _userService
+@inject IJSRuntime _jsRuntime
+@layout LoginLayout
+
+<div class="relative flex h-full w-full flex-col items-center justify-center">
+    <div class="-mt-24 mb-4">
+        <img src="/images/launchlogo.png" class="max-h-64" alt="APForums Logo" />
+    </div>
+    <div class="font flex font-serif text-fuchsia-300 md:text-2xl">
+        <h2>Authenticating</h2>
+        <i class="ml-2 mb-1 fa fa-circle-o-notch fa-spin"></i>
+    </div>
+</div>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitiateColorScheme();
+        var authInfoStr = await SecureStorage.Default.GetAsync(nameof(Settings.authInfo));
+        if (string.IsNullOrWhiteSpace(authInfoStr))
+        {
+            NavManager.NavigateTo("/login");
+        } else
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var authInfo = JsonSerializer.Deserialize<AuthInfo>(authInfoStr, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var token = handler.ReadToken(authInfo.AccessToken) as JwtSecurityToken;
+            var expiryDateSeconds = long.Parse(token.Claims.FirstOrDefault(t => t.Type == JwtRegisteredClaimNames.Exp).Value);
+            var expiryDateUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(expiryDateSeconds);
+            if (DateTime.UtcNow > expiryDateUtc)
+            {
+                var oldAuth = new LoginResponse
+                {
+                    AccessToken = authInfo.AccessToken,
+                    RefreshToken = authInfo.RefreshToken
+                };
+                var newAuth = await _loginService.Refresh(oldAuth);
+                if (newAuth.Status == AuthStatus.Unauthroized)
+                {
+                    await App.Current.MainPage.DisplayAlert("Failed!", "Session has expired, please login again!", "Ok");
+                    NavManager.NavigateTo("/login");
+                } else
+                {
+                    await _loginService.SetAuthInfo(newAuth.AccessToken, newAuth.RefreshToken);
+                    await _userService.UpdateCachedUserInfo(Settings.authInfo.Id);
+                    NavManager.NavigateTo("/home");
+                }
+            } else
+            {
+                Settings.authInfo = authInfo;
+                await _userService.UpdateCachedUserInfo(Settings.authInfo.Id);
+                NavManager.NavigateTo("/home");
+            }
+        }
+    }
+
+    private async Task InitiateColorScheme()
+    {
+        var updateNeeded = Settings.InitiateColors();
+        if (updateNeeded)
+        {
+            ColorSet primarySet, secondarySet;
+            Settings.SelectablePrimaryColors.TryGetValue(Settings.PrimaryColor, out primarySet);
+            Settings.SelectableSecondaryColors.TryGetValue(Settings.SecondaryColor, out secondarySet);
+            if (primarySet == null || secondarySet == null) return;
+            await _jsRuntime.InvokeVoidAsync("setColors", primarySet.RGBColor, secondarySet.RGBColor);
+        }
+    }
+
+}

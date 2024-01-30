@@ -1,0 +1,19 @@
+﻿@inject NavigationManager NavManager
+
+<div class="flex justify-center">
+    <a class="@(Category.Equals("Profile") ? selectedCSS : "") text-sm md:text-md font-medium w-1/2 text-center hover:bg-secondary hover:text-secondarytext py-3" href="/settings/profile"> Profile Settings</a>
+    <a class="@(Category.Equals("Application") ? selectedCSS : "") text-sm md:text-md font-medium w-1/2 text-center rounded-r-lg hover:bg-secondary hover:text-secondarytext py-3" href="/settings/application"> Application Settings</a>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public String Category { get; set; } = "Profile";
+
+    private String selectedCSS = "bg-primary text-white";
+
+}
+
+
+

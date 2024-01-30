@@ -1,0 +1,169 @@
+﻿@page "/forum/{Id:int}/addpost"
+@using System.Text.Json
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@using System.ComponentModel.DataAnnotations;
+@inject IForumService _forumService
+@inject IPostService _postService
+@inject NavigationManager NavManager
+
+@if (forumResponse == null)
+{
+    <h2>Loading Forum Information...</h2>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="flex text-base md:text-lg lg:text-2xl mt-4 font-serif ">
+            <a href="/forum/@Id"><h1 class="font-bold text-primary">(@forumResponse.Data.Name):&nbsp;</h1></a>
+            <span class="text-secondary font-semibold">Add New Post</span>
+        </div>
+        <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+        <div class="mt-4 p-4 flex flex-col w-full items-center md:items-start">
+            <EditForm class="w-full max-w-2xl space-y-4" Model="NewPostModel" OnValidSubmit="HandlePostSubmit">
+                <DataAnnotationsValidator />
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Title: </label>
+                    <div class="grow">
+                        <InputText placeholder="New forum title..." class="placeholder:text-center px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary w-full" 
+                        @bind-Value="NewPostModel.Title"></InputText>
+                        <ValidationMessage For="@(() => NewPostModel.Title)" />
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-start">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Content: </label>
+                    <div class="grow">
+                        <InputTextArea placeholder="Description about the new forum..." class="placeholder:text-center px-2 py-2 rounded-lg h-24 shadow-md border-2 border-solid border-secondary w-full" 
+                        @bind-Value="NewPostModel.Content"></InputTextArea>
+                        <ValidationMessage For="@(() => NewPostModel.Content)" />
+                    </div> 
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Type: </label>
+                    <div class="grow">
+                        <InputSelect class="px-2 py-1 rounded-lg shadow-md border-2 border-solid border-secondary w-full text-center" @bind-Value="NewPostModel.Type">
+                            <option value="-1" selected disabled>-- Select Type --</option>
+                            @foreach (var type in Post.TypeNames)
+                            {
+                                <option value="@type.Key">@type.Value</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => NewPostModel.Type)" />
+                    </div>
+                </div>
+                <div class="flex flex-wrap">
+                    <label class="mr-3 text-primary font-bold text-sm md:text-base lg:text-lg">Selected Tags: </label>
+                    @foreach (var tagID in NewPostModel.PostTags)
+                    {
+                        <div class="px-2 md:px-3 py-1 bg-secondary text-secondarytext font-medium rounded-2xl mr-1" @onclick="@(() => HandleRemoveTag(tagID))">@PostTag.CachedPostTags[tagID].Name</div>
+                    }
+                    @if (NewPostModel.PostTags.Count() == 0)
+                    {
+                        <span class="text-secondary font-semibold text-sm md:text-md lg:text-lg"> No tags selected!</span>
+                    }
+                </div>
+                <div class="mt-2 flex flex-col">
+                    @if (NewPostModel.PostTags.Count() == 5)
+                    {
+                        <p class="opacity-75 ml-1 text-primary text-xs md:text-sm">You can only select a maximum of five tags!</p>
+                    }
+                    <hr class="my-2 border border-primary max-w-xl" />
+                    <div class="flex flex-wrap">
+                        @foreach (var tag in UnselectedTags)
+                        {
+                            <div class="px-2 md:px-3 py-1 bg-secondary text-secondarytext font-medium rounded-2xl mr-1 mt-1" @onclick="@(() => HandleAddTag(tag.Id))">@tag.Name</div>
+                        }
+                    </div>
+                    
+                </div>
+                <button class="w-full px-2 md:px-3 py-1 font-semibold rounded-lg text-primarytext bg-primary text-sm md:text-base lg:text-lg" type="submit">Add Post</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private BasicHttpResponseWithData<Forum> forumResponse = null;
+
+    private PostModel NewPostModel = new();
+
+    private List<PostTag> UnselectedTags = PostTag.CachedPostTags.Values.ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        forumResponse = await _forumService.GetForum(Id);
+        if (forumResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", forumResponse.Error, "Ok!");
+            NavManager.NavigateTo("/home");
+            return;
+        }
+    }
+
+    private class PostModel
+    {
+        [Required]
+        [StringLength(512, MinimumLength = 2, ErrorMessage = "The length of the title should be between 2-512 characters!")]
+        public string Title { get; set; }
+
+        [Required]
+        [MaxLength(2048, ErrorMessage = "The length of post content should not exceed 2048 characters!")]
+        public string Content { get; set; }
+
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please select a type from the list!")]
+        public int Type { get; set; }
+
+        public List<int> PostTags { get; set; } = new();
+    }
+
+    private async Task HandlePostSubmit()
+    {
+        var newPost = new Post();
+        newPost.Title = NewPostModel.Title;
+        newPost.Content = NewPostModel.Content;
+        newPost.PostTags = NewPostModel.PostTags;
+        newPost.Type = NewPostModel.Type;
+        newPost.ForumId = Id;
+        newPost.User = new BasicUser { Id = Settings.authInfo.Id };
+        // Make the request to the server
+        var response = await _postService.AddPost(newPost);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            var newPostId = response.Data;
+            await App.Current.MainPage.DisplayAlert("Success!", "You have successfully created a post!", "Ok");
+            NavManager.NavigateTo($"/post/{newPostId}");
+        }
+        else
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", response.Error, "Ok");
+            if (response.Status == HttpStatusCode.Forbidden)
+            {
+                NavManager.NavigateTo("/home");
+            }
+        }
+    }
+
+    private void HandleAddTag(int id)
+    {
+        if (NewPostModel.PostTags.Count() >= 5)
+        {
+            return;
+        }
+        UnselectedTags.Remove(PostTag.CachedPostTags[id]);
+        NewPostModel.PostTags.Add(id);
+    }
+
+    private void HandleRemoveTag(int id)
+    {
+        NewPostModel.PostTags.Remove(id);
+        UnselectedTags.Add(PostTag.CachedPostTags[id]);
+    }
+    
+}

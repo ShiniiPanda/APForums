@@ -1,0 +1,11 @@
+﻿@using APForums.Client.Data
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+
+<h3>@Activity.Message - @Activity.Source - @Activity.Read.ToString()</h3>
+
+@code {
+    [Parameter]
+    public Activity Activity { get; set; }
+}

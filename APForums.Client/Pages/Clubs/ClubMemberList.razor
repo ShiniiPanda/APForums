@@ -1,0 +1,137 @@
+﻿@page "/club/{Id:int}/members"
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data
+@using System.Net
+@inject IClubService _clubService
+@inject NavigationManager NavManager
+
+@if (Club == null)
+{
+    <h2>Loading Club Information...</h2>
+} else
+{
+    <div class="bg-gradient-to-b from-primary/5 from-1% via-white via-50% to-primary/5 to-99% rounded-lg shadow-lg py-6 px-8">
+        <div class="flex text-base md:text-lg lg:text-2xl mt-4 font-serif ">
+            <a href="/club/@Club.Id"><h1 class="font-bold text-primary">(@Club.Name):&nbsp;</h1></a>
+            <span class="text-secondary font-semibold">Member List</span>
+        </div>
+        <hr class="w-full mt-1 border-2 border-solid border-secondary/80">
+        <div class="mt-4 p-4 flex flex-col w-full items-center md:items-start">
+            <table class="w-full table-auto border-separate border-spacing-3 text-center whitespace-normal">
+                <thead>
+                    <tr>
+                        <th class="text-xs md:text-base bg-primary text-primarytext px-3 py-1 rounded-2xl font-medium">Name</th>
+                        <th class="text-xs md:text-base bg-primary text-primarytext px-3 py-1 rounded-2xl font-medium">TP Number</th>
+                        <th class="text-xs md:text-base bg-primary text-primarytext px-3 py-1 rounded-2xl font-medium">Role</th>
+                        @if (IsLeader)
+                        {
+                            <th class="text-xs md:text-base bg-secondary text-secondarytext px-3 py-1 rounded-2xl">Change Role</th>
+                        } 
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var member in membersResponse.Data)
+                    {
+                        <tr @key="member.User.Id">
+                            <td class="px-2 py-1 text-xs md:text-base border border-solid border-black rounded-2xl font-medium hover:text-secondary hover:font-semibold"><a href="/profile/@member.User.Id">@member.User.Name</a></td>
+                            <td class="px-2 py-1 text-xs md:text-base border border-solid border-black rounded-2xl font-medium">@member.User.TPNumber</td>
+                            <td class="px-2 py-1 text-xs md:text-base border border-solid border-black rounded-2xl font-medium">@GetRoleName(member.Role)</td>
+                            @if (IsLeader)
+                            {
+                                <td class="text-xs md:text-base border border-solid border-black rounded-2xl">
+                                    <select class="px-2 font-medium" @key="@member.User.Id" disabled="@ProcessingRoleChange" @onchange="@(value => HandleMemberRoleChange(value, member))">
+                                        @foreach (var role in Club.ClubRoles)
+                                        {
+                                            <option value="@role.Key" selected="@(member.Role == role.Key)">@role.Value</option>
+                                        }
+                                    </select>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+ }
+
+
+@code 
+{
+    [Parameter]
+    public int Id { get; set; }
+
+    private Club Club { get; set; }
+
+    private int memberStatus { get; set; } = 0;
+
+    private BasicHttpResponseWithData<IEnumerable<BasicUserWithClubRole>> membersResponse = null;
+
+    private bool ProcessingRoleChange = false;
+
+    private bool IsLeader = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Club = await _clubService.GetClub(Id);
+        if (Club == null)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", "Unable to fetch club information!", "Ok");
+            NavManager.NavigateTo("/home");
+            return;
+        }
+        memberStatus = await _clubService.GetMemberStatus(Id ,Settings.authInfo.Id);
+        if (memberStatus == 3) IsLeader = true;
+        membersResponse = await _clubService.GetClubMembers(Id);
+        if (membersResponse.Status != HttpStatusCode.OK)
+        {
+            await App.Current.MainPage.DisplayAlert("Whoopsie!", membersResponse.Error, "Ok");
+            NavManager.NavigateTo("/home");
+        } else
+        {
+            membersResponse.Data = membersResponse.Data.OrderByDescending(u => u.Role);
+        }
+    }
+
+    private string GetRoleName(int role)
+    {
+        if (Club.ClubRoles.ContainsKey(role))
+        {
+            return Club.ClubRoles[role];
+        } else
+        {
+            return "Member";
+        }
+    }
+
+    private async Task HandleMemberRoleChange(ChangeEventArgs args, BasicUserWithClubRole UserObject)
+    {
+        var newRoleInt = int.Parse(args.Value.ToString());
+        if (UserObject.Role == newRoleInt) return;
+        ProcessingRoleChange = true;
+        if (newRoleInt == 3)
+        {
+            var confirmation = await App.Current
+            .MainPage
+            .DisplayAlert("Confirm", $"Are you sure you want to make {UserObject.User.Name} a leader?", "Yes", "No");
+            if (!confirmation)
+            {
+                ProcessingRoleChange = false;
+                return;
+            }
+        }
+        var response = await _clubService.ChangeClubMemberStatus(Id, (int)UserObject.User.Id, newRoleInt);
+        if (response.Status == HttpStatusCode.OK)
+        {
+            UserObject.Role = newRoleInt;
+            membersResponse.Data = membersResponse.Data.OrderByDescending(m => m.Role);
+        } else
+        {
+            await App.Current.MainPage.DisplayAlert("Confirm", response.Error, "Ok");
+        }
+        ProcessingRoleChange = false;
+    }
+
+}

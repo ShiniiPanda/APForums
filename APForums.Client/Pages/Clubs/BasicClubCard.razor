@@ -1,0 +1,20 @@
+﻿@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Interfaces
+@using APForums.Client.Data.Structures
+
+<a href="/club/@Club.Id">
+    <div class="flex flex-col justify-center items-center p-2 mt-2 transform hover:scale-105 transition-transform duration-300">
+        <img class="h-32 w-32" src="@GetClubLogoUrl()" alt="Club Logo" />
+        <p class="text-center font-medium rounded-lg mt-1 w-full px-2 py-1 bg-primary text-primarytext text-sm">@Club.Abbreviation</p>
+    </div>
+</a>
+
+@code {
+    [Parameter]
+    public Club Club { get; set; }
+
+    private string GetClubLogoUrl()
+    {
+        return $"/images/club/club_{Club.Abbreviation}_LOGO.png";
+    }
+}

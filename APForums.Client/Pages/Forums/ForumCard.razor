@@ -1,0 +1,81 @@
+﻿@using System.Text.Json
+@using APForums.Client.Data.Storage
+@using System.Net
+@using APForums.Client.Data
+@using APForums.Client.Pages.Posts
+@using APForums.Client.Data.DTO
+@using APForums.Client.Data.Structures
+@using APForums.Client.Data.Interfaces
+@inject NavigationManager NavManager
+@inject IForumService _forumService
+
+<a href="/forum/@Forum.Id">
+    <div class="p-3 shadow-lg border-2 border-primary border-solid flex flex-col rounded-xl m-3">
+        <div class="flex flex-col items-center">
+            <h1 class="mt-2 px-2 text-sm md:text-base lg:text-lg font-semibold text-primary text-center">@Forum.Name</h1>
+            @if (Forum.ClubId != null)
+            {
+                <div class="text-secondary/80 font-medium text-center text-xs md:text-sm lg:text-md mb-2">
+                    <a href="/club/@Forum.ClubId">@Forum.ClubName</a>
+                </div>
+            }
+            <hr class="border border-solid border-secondary/80 px-4 w-full max-w-2xl" />
+            @if (!string.IsNullOrWhiteSpace(Forum.Description))
+            {
+                <div class="p-2 font-medium text-center">
+                    @if (Preview)
+                    {
+                        @Forum.GetDescriptionPreview()
+                    }
+                    else
+                    {
+                        @Forum.Description
+                    }
+                </div>
+            }
+            <hr class="border border-solid border-secondary/80 px-4 w-full max-w-2xl" />
+            @if (Post != null)
+            {
+               @* <div class="my-3 px-6 py-3 shadow-md shadow-secondary rounded-2xl">
+                    <div>
+                        <a class="font-semibold text-primary" href="/profile/@Post.User.Id">@Post.User.Name </a>
+                        <span class="text-secondary font-medium"> posted on </span>
+                        <span class="text-xs md:text-sm opacity-75"> @Post.PublishedDate</span>
+                        <span class="text-secondary font-semibold"> :</span>
+                        <a href="/post/@Post.Id">
+                            (<span class="text-primary font-medium">@GetPostTypeName()</span>)
+                            <span class="">@Post.Title</span>
+                        </a>
+                    </div>
+                </div>*@
+                <PostCard Post="Post" ContentPreview="Preview" />
+            }
+            else
+            {
+                <h2 class="my-2 text-primary font-medium">This forum doesn't have any posts yet!'</h2>
+            }
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter]
+    public Forum Forum { get; set; }
+
+    #nullable enable
+    [Parameter]
+    public Post? Post { get; set; } = null;
+#nullable disable
+
+    [Parameter]
+    public bool Preview { get; set; } = false;
+
+    private string GetPostTypeName()
+    {
+        if (Data.DTO.Post.TypeNames.ContainsKey(Post.Type))
+        {
+            return Data.DTO.Post.TypeNames[Post.Type];
+        }
+        return "Unknown";
+    }
+}

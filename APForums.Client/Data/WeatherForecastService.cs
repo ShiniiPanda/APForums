@@ -1,3 +1,5 @@
+using System.Text.Json.Nodes;
+
 namespace APForums.Client.Data
 {
     public class WeatherForecastService
@@ -15,6 +17,12 @@ namespace APForums.Client.Data
                 TemperatureC = Random.Shared.Next(-20, 55),
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             }).ToArray());
+        }
+
+        public Task<WeatherForecast> GetSingularForecast()
+        {
+            var forecast = new WeatherForecast();
+            return Task.FromResult(forecast);
         }
     }
 }

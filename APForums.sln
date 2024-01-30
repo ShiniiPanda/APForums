@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33414.496
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APForums.Server", "APForums.Server\APForums.Server.csproj", "{1C3CAC8C-870A-4859-8B22-9DC3C0F89926}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APForums.Client", "APForums.Client\APForums.Client.csproj", "{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C3CAC8C-870A-4859-8B22-9DC3C0F89926}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C3CAC8C-870A-4859-8B22-9DC3C0F89926}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C3CAC8C-870A-4859-8B22-9DC3C0F89926}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C3CAC8C-870A-4859-8B22-9DC3C0F89926}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EBEB8AE-AAFC-4035-AA3A-75C3AF926028}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {665E2A94-CE5E-43CA-8E47-B252FE037579}
+	EndGlobalSection
+EndGlobal

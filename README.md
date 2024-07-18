@@ -16,16 +16,16 @@
 <h3 align="center">APForums</h3>
 
   <p align="center">
-    A Cross-Platform Social Networking Application for Asia Pacific University (MY) Students.
+    A Cross-Platform Social Networking Application for <a href="https://www.apu.edu.my/">Asia Pacific University (MY)</a> Students.
     <br />
-    <a href="https://github.com/ShiniiPanda/APForums/issues">Report Bug</a>
+    <a href="https://github.com/ShiniiPanda/APForums/issues" style="color: purple;">Report Bug</a>
     ·
-    <a href="https://github.com/ShiniiPanda/APForums/issues">Request Feature</a>
+    <a href="https://github.com/ShiniiPanda/APForums/issues" style="color: purple;">Request Feature</a>
   </p>
 </div>
 
 
-<!--
+
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -40,11 +40,11 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#backend-instructions">Backend Instructions</a></li>
+        <li><a href="#frontend-instructions">Frontend Instructions</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -59,7 +59,9 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+APForums came about from the wish to ameliorate interpersonal communication among the student body at Asia Pacific University.
+The project was developed by <a href="https://www.github.com/ShiniiPanda">Abdelrahman Ashraf</a> as part of their final year assessment at the university.
+The platform was built to support native functionality across a number of platforms (Windows, Android, iOS, MacOS) to allow for ease of accessibility to a wider audience.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -67,14 +69,14 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 ### Built With
 
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+* [![.NET][.NET]][.NET-url]
+* [![Blazor][Blazor]][Blazor-url]
+* [![MAUI][MAUI]][MAUI-url]
+* [![Tailwind CSS][TailwindCSS]][TailwindCSS-url]
+* [![Maria DB][MariaDB]][MariaDB-url]
+
+The backend was built using ASP.NET API, EntityFrameworkCore 7, and MariaDB.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -83,32 +85,56 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+There are two steps to running this application. 
+Firstly, you need to start up the server. You may follow the steps <a href="#backend-instructions">here</a>.
+Having started the server, you may either compile the application or run the compiled version. You may following the steps <a href="#frontend-instructions">here</a>.
+
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+Before anything, there are some pre-requisites that you need to consider before running this application.
+The front-end of the application supports multiple platforms and is built using Microsoft's new .NET MAUI framework.
+For each target operating system, there are some prerequisites that should be meet to ensure stable execution:
 
-### Installation
+* Android: Android 7.0 (API 24) or higher is required.
+* iOS: iOS 14 or higher is required.
+* macOS: macOS 11 or higher, using Mac Catalyst.
+* Windows: Windows 11 and Windows 10 version 1809 or higher, using Windows UI Library (WinUI) 3.
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+The application is packaged with the required .net classes and libraries.
+However, if you intend to run the server or compile anything from source, please make sure you have .NET 7 installed on your system with access to the dotnet cli.
+
+
+- 
+
+### Backend Instructions
+
+1. Clone the repository
+2. cd into APForums.Server
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   cd APForums.Server
    ```
-3. Install NPM packages
+3. Open a terminal window in the current directory (APForums.Server).
+   
+4. Start the server by running the following command
    ```sh
-   npm install
+   dotnet run --launch-profile http
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+### Frontend Instructions
+
+1. Clone the repository
+2. cd into APForums.Client
+   ```sh
+   cd APForums.Client
    ```
+3. Access latest compiled source in /bin/Debug/[target-framework]
+   Or compile from source by opening the project in Visual Studio
+   (CLI tools for MAUI are still being worked on by the Microsoft team).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -119,21 +145,8 @@ This is an example of how to list things you need to use the software and how to
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
-
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -160,7 +173,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -169,9 +182,9 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
+Abdelrahman Ashraf - [abdelrahman-ashraf-ahmed](https://www.linkedin.com/in/abdelrahman-ashraf-ahmed/) - abdelrahman.as.ah@gmail.com
 
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
+Project Link: [https://github.com/ShiniiPanda/APForums](https://github.com/ShiniiPanda/APForums)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -180,12 +193,10 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
-* []()
-* []()
+* [My wonderful FYP supervisor: Mr. Dhason Padmakumar @ Asia Pacific University](https://www.linkedin.com/in/padmakumar-dhason-02002129/)
+* My friends and family!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
--->
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
@@ -202,20 +213,14 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 [license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[product-screenshot]: resources/logo.png
+[.NET]: https://img.shields.io/badge/.NET%207-passing?style=for-the-badge&logo=dotnet&logoColor=ffffff&logoSize=auto&labelColor=%23512BD4&color=000000
+[.NET-url]: https://learn.microsoft.com/en-us/dotnet/
+[MariaDB]: https://img.shields.io/badge/Maria%20DB-passing?style=for-the-badge&logo=mariadb&logoColor=003545&labelColor=orange&color=black
+[MariaDB-url]: https://mariadb.org/
+[TailwindCSS]: https://img.shields.io/badge/Tailwind%20CSS-passing?style=for-the-badge&logo=tailwindcss&logoColor=%2306B6D4&logoSize=auto&labelColor=black&color=white
+[TailwindCSS-url]: https://tailwindcss.com/
+[MAUI]: https://img.shields.io/badge/.NET%20MAUI-passing?style=for-the-badge&logo=dotnet&logoColor=%23512BD4&logoSize=auto&label=MAUI&labelColor=black&color=white
+[MAUI-url]: https://dotnet.microsoft.com/en-us/apps/maui
+[Blazor]: https://img.shields.io/badge/Blazor%20Hybrid-passing?style=for-the-badge&logo=blazor&logoColor=%23512BD4&logoSize=auto&label=Blazor&labelColor=black&color=purple
+[Blazor-url]: https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor

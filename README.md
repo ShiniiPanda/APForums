@@ -94,7 +94,7 @@ Having started the server, you may either compile the application or run the com
 
 Before anything, there are some pre-requisites that you need to consider before running this application.
 The front-end of the application supports multiple platforms and is built using Microsoft's new .NET MAUI framework.
-For each target operating system, there are some prerequisites that should be meet to ensure stable execution:
+For each target operating system, there are some prerequisites that should be met to ensure stable execution:
 
 * Android: Android 7.0 (API 24) or higher is required.
 * iOS: iOS 14 or higher is required.
@@ -104,8 +104,6 @@ For each target operating system, there are some prerequisites that should be me
 The application is packaged with the required .net classes and libraries.
 However, if you intend to run the server or compile anything from source, please make sure you have .NET 7 installed on your system with access to the dotnet cli.
 
-
-- 
 
 ### Backend Instructions
 
@@ -143,13 +141,20 @@ However, if you intend to run the server or compile anything from source, please
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+APForums is meant to be incorporated with the Application Suite provided by Asia Pacific University to their student and teaching bodies. The application is meant to be accessed using the University Email and Password provided to members. For a list of development accounts, please check the APForums.Server directory.
+
+The application boasts the typical social networking features that you may be used to, such as:
+
+* Forums and Subscriptions
+* Posts, Comments, Reactions (Upvotes, Downvotes)
+* Virtual Enrollment and Subscription to Club Activities.
+* Follow/Followers connection system.
+* Profile Customization, Social Links, Tags.
+* Notification Manager.
+* Fully Customizable Color Scheme reflected throughout the entire application.
+* Access to Event Board and interest system.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- CONTRIBUTING -->

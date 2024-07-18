@@ -9,28 +9,23 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="resources/logo.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/ShiniiPanda/APForums">
+    <img src="resources/banner.png" alt="Logo" width="800" height="200">
   </a>
 
-<h3 align="center">project_title</h3>
+<h3 align="center">APForums</h3>
 
   <p align="center">
-    project_description
+    A Cross-Platform Social Networking Application for Asia Pacific University (MY) Students.
     <br />
-    <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/github_username/repo_name">View Demo</a>
+    <a href="https://github.com/ShiniiPanda/APForums/issues">Report Bug</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/github_username/repo_name/issues">Request Feature</a>
+    <a href="https://github.com/ShiniiPanda/APForums/issues">Request Feature</a>
   </p>
 </div>
 
 
-
+<!--
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -190,7 +185,7 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 * []()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+-->
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
